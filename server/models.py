@@ -11,7 +11,7 @@ class User(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    email = db.Column(db.String(255), unique=True, nullable=False)
     _password_hash = db.Column(db.String(128), nullable=True)
 
     @hybrid_property
@@ -25,6 +25,12 @@ class User(db.Model):
     
     def authenticate(self, password):
         return bcrypt.check_password_hash(self._password_hash, password.encode('utf-8'))
+    
+    __table_args__ = (
+        CheckConstraint("length(username) >= 3", name="username_min_length"),
+        CheckConstraint("length(email) >= 6", name="email_min_length"),
+        CheckConstraint("email LIKE '%@%.%'", name="email_format"),
+    )
 
 class UserSchema(Schema):
     pass
