@@ -3,12 +3,11 @@ import re
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import validates as model_validates
 from sqlalchemy.ext.hybrid import hybrid_property
-from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, post_load
+from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
 from config import db, bcrypt
 
 USERNAME_REGEX = re.compile(r"^[a-z0-9_]+$")
-EMAIL_REGEX = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$")
 
 class User(db.Model):
@@ -29,7 +28,6 @@ class User(db.Model):
         # Validate password strength and type before hashing
         if not isinstance(password, str):
             raise ValueError("Password must be a string.")
-        password = password.strip()
         if len(password) < 8:
             raise ValueError("Password must be at least 8 characters long.")
         if not PASSWORD_REGEX.match(password):  # Ensuring a safe password
@@ -54,28 +52,86 @@ class User(db.Model):
     def validate_username(self, key, value):
         if not isinstance(value, str):
             raise ValueError(f"{key} must be a string.")
-        value = value.strip().lower()
-        if len(value) < 3:
-            raise ValueError(f"{key} must be at least 3 characters long.")
+        if len(value) < 3 or len(value) > 50:
+            raise ValueError(f"{key} must be between 3 and 50 characters long.")
         if not USERNAME_REGEX.match(value):
             raise ValueError(f"{key} can only contain lowercase letters, numbers, and underscores.")
+        if User.query.filter_by(username=value).first():
+            raise ValueError(f"{key} must be unique.")
         return value
     
     @model_validates('email')
     def validate_email(self, key, value):
         if not isinstance(value, str):
             raise ValueError(f"{key} must be a string.")
-        value = value.strip().lower()
-        if len(value) < 6:
-            raise ValueError(f"{key} must be at least 6 characters long.")
-        if not EMAIL_REGEX.match(value):
-            raise ValueError(f"{key} is not a valid email address.")
+        if len(value) < 6 or len(value) > 255:
+            raise ValueError(f"{key} must be between 6 and 255 characters long.")
+        if User.query.filter_by(email=value).first():
+            raise ValueError(f"{key} must be unique.")
         return value        
 
         
 
 class UserSchema(Schema):
-    pass
+    id = fields.Int(dump_only=True)
+    username = fields.Str(required=True, validate=[
+        validate.Length(min=3, max=50),
+        validate.Regexp(USERNAME_REGEX, error="Username can only contain lowercase letters, numbers, and underscores.")
+    ])
+    email = fields.Email(required=True, validate=[
+        validate.Length(min=6, max=255)
+    ])
+    password = fields.Str(load_only=True, required=True, validate=[
+        validate.Length(min=8),
+        validate.Regexp(PASSWORD_REGEX, error="Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.")
+    ])
+
+    class Meta:
+        unknown = RAISE
+        ordered = True
+    
+    @pre_load
+    def preprocess_input(self, data, **kwargs):
+        data = dict(data)  # Safer copy of input data
+        if "username" in data:
+            data["username"] = data["username"].strip().lower()
+        if "email" in data:
+            data["email"] = data["email"].strip().lower()
+        if "password" in data:
+            data["password"] = data["password"].strip()
+        return data
+    
+    @schema_validates('username')
+    def validate_unique_username(self, value, **kwargs):
+        if not isinstance(value, str):
+            raise ValidationError("Username must be a string.")
+        if len(value) < 3 or len(value) > 50:
+            raise ValidationError("Username must be between 3 and 50 characters long.")
+        if not USERNAME_REGEX.match(value):
+            raise ValidationError("Username can only contain lowercase letters, numbers, and underscores.")
+        if User.query.filter_by(username=value).first():
+            raise ValidationError("Username must be unique.")
+        return value
+    
+    @schema_validates('email')
+    def validate_unique_email(self, value, **kwargs):
+        if not isinstance(value, str):
+            raise ValidationError("Email must be a string.")
+        if len(value) < 6 or len(value) > 255:
+            raise ValidationError("Email must be between 6 and 255 characters long.")
+        if User.query.filter_by(email=value).first():
+            raise ValidationError("Email must be unique.")
+        return value
+            
+
+    @post_load
+    def create_user(self, data, **kwargs):
+        user = User(
+            username=data['username'],
+            email=data['email']
+        )
+        user.password_hash = data['password']  # This will trigger the password hashing
+        return user
 
 class Category(db.Model):
     pass
