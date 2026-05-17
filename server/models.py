@@ -10,6 +10,8 @@ from config import db, bcrypt
 USERNAME_REGEX = re.compile(r"^[a-z0-9_]+$")
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$")
 
+TRANSACTION_TYPES = ('income', 'expense')
+
 class User(db.Model):
     """User model for authentication and user management."""
     __tablename__ = 'users'
@@ -184,7 +186,15 @@ class CategorySchema(Schema):
         return Category(**data)
 
 class Transaction(db.Model):
-    pass
+    """Transaction model for recording income and expenses."""
+    __tablename__ = 'transactions'
+
+    id = db.Column(db.Integer, primary_key=True)
+    amount = db.Column(db.Float, nullable=False)
+    type = db.Column(db.Enum(*TRANSACTION_TYPES, name="transaction_types"), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    date = db.Column(db.Date, nullable=False)
 
 class TransactionSchema(Schema):
     pass
