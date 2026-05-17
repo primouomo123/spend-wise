@@ -154,7 +154,34 @@ class Category(db.Model):
         return value
 
 class CategorySchema(Schema):
-    pass
+    id = fields.Int(dump_only=True)
+    name = fields.Str(required=True, validate=[
+        validate.Length(min=1, max=100)
+    ])
+    user_id = fields.Int(required=True)
+
+    class Meta:
+        unknown = RAISE
+        ordered = True
+    
+    @pre_load
+    def preprocess_input(self, data, **kwargs):
+        data = dict(data)  # Safer copy of input data
+        if "name" in data:
+            data["name"] = data["name"].strip()
+        return data
+    
+    @schema_validates('name')
+    def validate_name(self, value, **kwargs):
+        if not isinstance(value, str):
+            raise ValidationError("Name must be a string.")
+        if len(value) < 1 or len(value) > 100:
+            raise ValidationError("Name must be between 1 and 100 characters long.")
+        return value
+    
+    @post_load
+    def create_category(self, data, **kwargs):
+        return Category(**data)
 
 class Transaction(db.Model):
     pass
