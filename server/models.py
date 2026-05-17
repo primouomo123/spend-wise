@@ -152,14 +152,6 @@ class Category(db.Model):
         if len(value) < 1 or len(value) > 100:
             raise ValueError(f"{key} must be between 1 and 100 characters long.")
         return value
-    
-    @model_validates('user_id')
-    def validate_user_id(self, key, value):
-        if not isinstance(value, int):
-            raise ValueError(f"{key} must be an integer.")
-        if not User.query.get(value):
-            raise ValueError(f"{key} must reference an existing user.")
-        return value
 
 class CategorySchema(Schema):
     pass
