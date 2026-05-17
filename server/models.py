@@ -134,7 +134,32 @@ class UserSchema(Schema):
         return user
 
 class Category(db.Model):
-    pass
+    """Category model for organizing transactions."""
+    __tablename__ = 'categories'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+
+    __table_args__ = (
+        CheckConstraint("length(name) >= 1", name="category_name_min_length"),
+    )
+
+    @model_validates('name')
+    def validate_name(self, key, value):
+        if not isinstance(value, str):
+            raise ValueError(f"{key} must be a string.")
+        if len(value) < 1 or len(value) > 100:
+            raise ValueError(f"{key} must be between 1 and 100 characters long.")
+        return value
+    
+    @model_validates('user_id')
+    def validate_user_id(self, key, value):
+        if not isinstance(value, int):
+            raise ValueError(f"{key} must be an integer.")
+        if not User.query.get(value):
+            raise ValueError(f"{key} must reference an existing user.")
+        return value
 
 class CategorySchema(Schema):
     pass
