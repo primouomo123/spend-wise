@@ -6,7 +6,7 @@ from marshmallow import Schema, fields, validate, validates as schema_validates,
 
 from config import db
 
-from utils.constants import TRANSACTION_TYPES
+from utils import TRANSACTION_TYPES
 
 class Transaction(db.Model):
     """Transaction model for recording income and expenses."""
