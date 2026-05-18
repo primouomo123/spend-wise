@@ -30,7 +30,7 @@ class Transaction(db.Model):
         CheckConstraint("length(description) >= 1", name="description_min_length"),
     )
 
-    @model_validates('amount')
+    @model_validates('amount', 'amount_usd')
     def validate_amount(self, key, value):
         if not isinstance(value, (int, float)):
             raise ValueError(f"{key} must be a number.")
@@ -44,14 +44,6 @@ class Transaction(db.Model):
             raise ValueError(f"{key} must be a string.")
         if len(value) != 3:
             raise ValueError(f"{key} must be a 3-letter currency code.")
-        return value
-    
-    @model_validates('amount_usd')
-    def validate_amount_usd(self, key, value):
-        if not isinstance(value, (int, float)):
-            raise ValueError(f"{key} must be a number.")
-        if value <= 0:
-            raise ValueError(f"{key} must be greater than 0.")
         return value
     
     @model_validates('transaction_type')
@@ -77,4 +69,78 @@ class Transaction(db.Model):
         return value
 
 class TransactionSchema(Schema):
-    pass
+    id = fields.Int(dump_only=True)
+    amount = fields.Float(required=True, validate=validate.Range(min=0.01))
+    currency = fields.Str(required=True, validate=validate.Length(equal=3))
+    amount_usd = fields.Float(required=True, validate=validate.Range(min=0.01))
+    transaction_type = fields.Str(required=True, validate=validate.OneOf(TRANSACTION_TYPES))
+    date = fields.Date(required=True)
+    description = fields.Str(required=True, validate=validate.Length(min=1))
+    user_id = fields.Int(required=True)
+    category_id = fields.Int(required=True)
+
+    class Meta:
+        unknown = RAISE
+        ordered = True
+    
+    @pre_load
+    def preprocess_input(self, data, **kwargs):
+        data = dict(data)  # Safer copy of input data
+        if "currency" in data:
+            data["currency"] = data["currency"].strip().upper()
+        if "description" in data:
+            data["description"] = data["description"].strip()
+        return data
+    
+    @schema_validates('amount')
+    def validate_amount(self, value, **kwargs):
+        if not isinstance(value, (int, float)):
+            raise ValidationError("Amount must be a number.")
+        if value <= 0:
+            raise ValidationError("Amount must be greater than 0.")
+        return value
+    
+    @schema_validates('currency')
+    def validate_currency(self, value, **kwargs):
+        if not isinstance(value, str):
+            raise ValidationError("Currency must be a string.")
+        if len(value) != 3:
+            raise ValidationError("Currency must be a 3-letter code.")
+        return value
+    
+    @schema_validates('amount_usd')
+    def validate_amount_usd(self, value, **kwargs):
+        if not isinstance(value, (int, float)):
+            raise ValidationError("Amount in USD must be a number.")
+        if value <= 0:
+            raise ValidationError("Amount in USD must be greater than 0.")
+        return value
+    
+    @schema_validates('transaction_type')
+    def validate_transaction_type(self, value, **kwargs):
+        if not isinstance(value, str):
+            raise ValidationError("Transaction type must be a string.")
+        if value not in TRANSACTION_TYPES:
+            raise ValidationError(f"Transaction type must be one of {TRANSACTION_TYPES}.")
+        return value
+    
+    @schema_validates('date')
+    def validate_date(self, value, **kwargs):
+        if not isinstance(value, date):
+            raise ValidationError("Date must be a valid date.")
+        return value
+    
+    @schema_validates('description')
+    def validate_description(self, value, **kwargs):
+        if not isinstance(value, str):
+            raise ValidationError("Description must be a string.")
+        if len(value) < 1:
+            raise ValidationError("Description must be at least 1 character long.")
+        return value
+    
+    @post_load
+    def make_transaction(self, data, **kwargs):
+        return Transaction(**data)
+    
+
+    # Remember to do decimals instead of floats in production for better precision!
