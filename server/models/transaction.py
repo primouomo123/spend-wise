@@ -1,3 +1,4 @@
+from decimal import Decimal, InvalidOperation
 from datetime import date
 
 from sqlalchemy import CheckConstraint
@@ -13,9 +14,9 @@ class Transaction(db.Model):
     __tablename__ = 'transactions'
 
     id = db.Column(db.Integer, primary_key=True)
-    amount = db.Column(db.Float, nullable=False)
+    amount = db.Column(db.Numeric(12, 2), nullable=False)
     currency = db.Column(db.String(3), nullable=False)
-    amount_usd = db.Column(db.Float, nullable=False)
+    amount_usd = db.Column(db.Numeric(12, 2), nullable=False)
     transaction_type = db.Column(db.Enum(*TRANSACTION_TYPES, name="transaction_types"), nullable=False)
     date = db.Column(db.Date, nullable=False)
     description = db.Column(db.String(255), nullable=False)
@@ -32,11 +33,13 @@ class Transaction(db.Model):
 
     @model_validates('amount', 'amount_usd')
     def validate_amount(self, key, value):
-        if not isinstance(value, (int, float)):
-            raise ValueError(f"{key} must be a number.")
-        if value <= 0:
+        try:
+            decimal_value = Decimal(str(value))
+        except (InvalidOperation, TypeError, ValueError):
+            raise ValueError(f"{key} must be a valid number.")
+        if decimal_value <= Decimal('0'):
             raise ValueError(f"{key} must be greater than 0.")
-        return value
+        return decimal_value
     
     @model_validates('currency')
     def validate_currency(self, key, value):
@@ -70,9 +73,9 @@ class Transaction(db.Model):
 
 class TransactionSchema(Schema):
     id = fields.Int(dump_only=True)
-    amount = fields.Float(required=True, validate=validate.Range(min=0.01))
+    amount = fields.Decimal(required=True, validate=validate.Range(min=0.01))
     currency = fields.Str(required=True, validate=validate.Length(equal=3))
-    amount_usd = fields.Float(required=True, validate=validate.Range(min=0.01))
+    amount_usd = fields.Decimal(required=True, validate=validate.Range(min=0.01))
     transaction_type = fields.Str(required=True, validate=validate.OneOf(TRANSACTION_TYPES))
     date = fields.Date(required=True)
     description = fields.Str(required=True, validate=validate.Length(min=1))
@@ -94,9 +97,7 @@ class TransactionSchema(Schema):
     
     @schema_validates('amount')
     def validate_amount(self, value, **kwargs):
-        if not isinstance(value, (int, float)):
-            raise ValidationError("Amount must be a number.")
-        if value <= 0:
+        if value <= Decimal('0'):
             raise ValidationError("Amount must be greater than 0.")
         return value
     
@@ -110,9 +111,7 @@ class TransactionSchema(Schema):
     
     @schema_validates('amount_usd')
     def validate_amount_usd(self, value, **kwargs):
-        if not isinstance(value, (int, float)):
-            raise ValidationError("Amount in USD must be a number.")
-        if value <= 0:
+        if value <= Decimal('0'):
             raise ValidationError("Amount in USD must be greater than 0.")
         return value
     
@@ -141,6 +140,3 @@ class TransactionSchema(Schema):
     @post_load
     def make_transaction(self, data, **kwargs):
         return Transaction(**data)
-    
-
-    # Remember to do decimals instead of floats in production for better precision!
