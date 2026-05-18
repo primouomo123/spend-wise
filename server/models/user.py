@@ -26,12 +26,10 @@ class User(db.Model):
     @password_hash.setter
     def password_hash(self, password):
         # Validate password strength and type before hashing
-        if not isinstance(password, str):
-            raise ValueError("Password must be a string.")
+        if not isinstance(password, str) or not PASSWORD_REGEX.match(password):  # Ensuring a safe password
+            raise ValueError("Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.")
         if len(password) < 8:
             raise ValueError("Password must be at least 8 characters long.")
-        if not PASSWORD_REGEX.match(password):  # Ensuring a safe password
-            raise ValueError("Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.")
         
         # Password hashing with bcrypt
         password_hash = bcrypt.generate_password_hash(password.encode('utf-8'))
@@ -50,24 +48,16 @@ class User(db.Model):
 
     @model_validates('username')
     def validate_username(self, key, value):
-        if not isinstance(value, str):
-            raise ValueError(f"{key} must be a string.")
+        if not isinstance(value, str) or not USERNAME_REGEX.match(value):
+            raise ValueError(f"{key} can only contain lowercase letters, numbers, and underscores.")
         if len(value) < 3 or len(value) > 50:
             raise ValueError(f"{key} must be between 3 and 50 characters long.")
-        if not USERNAME_REGEX.match(value):
-            raise ValueError(f"{key} can only contain lowercase letters, numbers, and underscores.")
-        if User.query.filter_by(username=value).first():
-            raise ValueError(f"{key} must be unique.")
         return value
     
     @model_validates('email')
     def validate_email(self, key, value):
-        if not isinstance(value, str):
-            raise ValueError(f"{key} must be a string.")
-        if len(value) < 6 or len(value) > 255:
+        if not isinstance(value, str) or (len(value) < 6 or len(value) > 255):
             raise ValueError(f"{key} must be between 6 and 255 characters long.")
-        if User.query.filter_by(email=value).first():
-            raise ValueError(f"{key} must be unique.")
         return value        
 
         
@@ -78,9 +68,7 @@ class UserSchema(Schema):
         validate.Length(min=3, max=50),
         validate.Regexp(USERNAME_REGEX, error="Username can only contain lowercase letters, numbers, and underscores.")
     ])
-    email = fields.Email(required=True, validate=[
-        validate.Length(min=6, max=255)
-    ])
+    email = fields.Email(required=True, validate=validate.Length(min=6, max=255))
     password = fields.Str(load_only=True, required=True, validate=[
         validate.Length(min=8),
         validate.Regexp(PASSWORD_REGEX, error="Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.")
@@ -103,25 +91,15 @@ class UserSchema(Schema):
     
     @schema_validates('username')
     def validate_unique_username(self, value, **kwargs):
-        if not isinstance(value, str):
-            raise ValidationError("Username must be a string.")
+        if not isinstance(value, str) or not USERNAME_REGEX.match(value):
+            raise ValidationError("Username can only contain lowercase letters, numbers, and underscores.")
         if len(value) < 3 or len(value) > 50:
             raise ValidationError("Username must be between 3 and 50 characters long.")
-        if not USERNAME_REGEX.match(value):
-            raise ValidationError("Username can only contain lowercase letters, numbers, and underscores.")
-        if User.query.filter_by(username=value).first():
-            raise ValidationError("Username must be unique.")
-        return value
     
     @schema_validates('email')
     def validate_unique_email(self, value, **kwargs):
-        if not isinstance(value, str):
-            raise ValidationError("Email must be a string.")
-        if len(value) < 6 or len(value) > 255:
+        if not isinstance(value, str) or (len(value) < 6 or len(value) > 255):
             raise ValidationError("Email must be between 6 and 255 characters long.")
-        if User.query.filter_by(email=value).first():
-            raise ValidationError("Email must be unique.")
-        return value
             
 
     @post_load
