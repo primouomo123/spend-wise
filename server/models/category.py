@@ -24,9 +24,7 @@ class Category(db.Model):
 
 class CategorySchema(Schema):
     id = fields.Int(dump_only=True)
-    name = fields.Str(required=True, validate=[
-        validate.Length(min=1, max=100)
-    ])
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
     user_id = fields.Int(required=True)
 
     class Meta:
