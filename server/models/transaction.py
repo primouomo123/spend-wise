@@ -43,17 +43,13 @@ class Transaction(db.Model):
     
     @model_validates('currency')
     def validate_currency(self, key, value):
-        if not isinstance(value, str):
-            raise ValueError(f"{key} must be a string.")
-        if len(value) != 3:
+        if not isinstance(value, str) or len(value) != 3:
             raise ValueError(f"{key} must be a 3-letter currency code.")
         return value
     
     @model_validates('transaction_type')
     def validate_transaction_type(self, key, value):
-        if not isinstance(value, str):
-            raise ValueError(f"{key} must be a string.")
-        if value not in TRANSACTION_TYPES:
+        if not isinstance(value, str) or value not in TRANSACTION_TYPES:
             raise ValueError(f"{key} must be one of {TRANSACTION_TYPES}.")
         return value
     
@@ -65,20 +61,18 @@ class Transaction(db.Model):
     
     @model_validates('description')
     def validate_description(self, key, value):
-        if not isinstance(value, str):
-            raise ValueError(f"{key} must be a string.")
-        if len(value) < 1:
-            raise ValueError(f"{key} must be at least 1 character long.")
+        if not isinstance(value, str) or (len(value) < 1 or len(value) > 255):
+            raise ValueError(f"{key} must be between 1 and 255 characters long.")
         return value
 
 class TransactionSchema(Schema):
     id = fields.Int(dump_only=True)
-    amount = fields.Decimal(required=True, validate=validate.Range(min=0.01))
+    amount = fields.Decimal(required=True, validate=validate.Range(min=Decimal('0.01')))
     currency = fields.Str(required=True, validate=validate.Length(equal=3))
-    amount_usd = fields.Decimal(required=True, validate=validate.Range(min=0.01))
+    amount_usd = fields.Decimal(required=True, validate=validate.Range(min=Decimal('0.01')))
     transaction_type = fields.Str(required=True, validate=validate.OneOf(TRANSACTION_TYPES))
     date = fields.Date(required=True)
-    description = fields.Str(required=True, validate=validate.Length(min=1))
+    description = fields.Str(required=True, validate=validate.Length(min=1, max=255))
     user_id = fields.Int(required=True)
     category_id = fields.Int(required=True)
 
@@ -99,43 +93,31 @@ class TransactionSchema(Schema):
     def validate_amount(self, value, **kwargs):
         if value <= Decimal('0'):
             raise ValidationError("Amount must be greater than 0.")
-        return value
     
     @schema_validates('currency')
     def validate_currency(self, value, **kwargs):
-        if not isinstance(value, str):
-            raise ValidationError("Currency must be a string.")
-        if len(value) != 3:
+        if not isinstance(value, str) or len(value) != 3:
             raise ValidationError("Currency must be a 3-letter code.")
-        return value
     
     @schema_validates('amount_usd')
     def validate_amount_usd(self, value, **kwargs):
         if value <= Decimal('0'):
             raise ValidationError("Amount in USD must be greater than 0.")
-        return value
     
     @schema_validates('transaction_type')
     def validate_transaction_type(self, value, **kwargs):
-        if not isinstance(value, str):
-            raise ValidationError("Transaction type must be a string.")
-        if value not in TRANSACTION_TYPES:
+        if not isinstance(value, str) or value not in TRANSACTION_TYPES:
             raise ValidationError(f"Transaction type must be one of {TRANSACTION_TYPES}.")
-        return value
     
     @schema_validates('date')
     def validate_date(self, value, **kwargs):
         if not isinstance(value, date):
             raise ValidationError("Date must be a valid date.")
-        return value
     
     @schema_validates('description')
     def validate_description(self, value, **kwargs):
-        if not isinstance(value, str):
-            raise ValidationError("Description must be a string.")
-        if len(value) < 1:
-            raise ValidationError("Description must be at least 1 character long.")
-        return value
+        if not isinstance(value, str) or (len(value) < 1 or len(value) > 255):
+            raise ValidationError("Description must be between 1 and 255 characters long.")
     
     @post_load
     def make_transaction(self, data, **kwargs):
