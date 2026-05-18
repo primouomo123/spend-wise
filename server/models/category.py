@@ -18,9 +18,7 @@ class Category(db.Model):
 
     @model_validates('name')
     def validate_name(self, key, value):
-        if not isinstance(value, str):
-            raise ValueError(f"{key} must be a string.")
-        if len(value) < 1 or len(value) > 100:
+        if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
             raise ValueError(f"{key} must be between 1 and 100 characters long.")
         return value
 
@@ -44,11 +42,8 @@ class CategorySchema(Schema):
     
     @schema_validates('name')
     def validate_name(self, value, **kwargs):
-        if not isinstance(value, str):
-            raise ValidationError("Name must be a string.")
-        if len(value) < 1 or len(value) > 100:
+        if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
             raise ValidationError("Name must be between 1 and 100 characters long.")
-        return value
     
     @post_load
     def create_category(self, data, **kwargs):
