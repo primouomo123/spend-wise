@@ -58,7 +58,10 @@ class User(db.Model):
     def validate_email(self, key, value):
         if not isinstance(value, str) or (len(value) < 6 or len(value) > 255):
             raise ValueError(f"{key} must be between 6 and 255 characters long.")
-        return value        
+        return value
+    
+    def __repr__(self):
+        return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
 
         
 

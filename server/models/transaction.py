@@ -64,6 +64,12 @@ class Transaction(db.Model):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 255):
             raise ValueError(f"{key} must be between 1 and 255 characters long.")
         return value
+    
+    def __repr__(self):
+        return (f"<Transaction id={self.id} amount={self.amount} currency='{self.currency}' "
+                f"amount_usd={self.amount_usd} transaction_type='{self.transaction_type}' "
+                f"date={self.date} description='{self.description}' user_id={self.user_id} "
+                f"category_id={self.category_id}>")
 
 class TransactionSchema(Schema):
     id = fields.Int(dump_only=True)

@@ -44,6 +44,9 @@ class Budget(db.Model):
         if not isinstance(value, int) or (value < 2000 or value > 2100):
             raise ValueError(f"{key} must be an integer between 2000 and 2100.")
         return value
+    
+    def __repr__(self):
+        return f"<Budget id={self.id} amount={self.amount} month={self.month} year={self.year} user_id={self.user_id} category_id={self.category_id}>"
 
 class BudgetSchema(Schema):
     id = fields.Int(dump_only=True)

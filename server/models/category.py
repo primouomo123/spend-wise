@@ -21,6 +21,9 @@ class Category(db.Model):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
             raise ValueError(f"{key} must be between 1 and 100 characters long.")
         return value
+    
+    def __repr__(self):
+        return f"<Category id={self.id} name='{self.name}' user_id={self.user_id}>"
 
 class CategorySchema(Schema):
     id = fields.Int(dump_only=True)
