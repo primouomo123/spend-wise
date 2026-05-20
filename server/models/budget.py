@@ -2,11 +2,9 @@ from decimal import Decimal, InvalidOperation
 
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import validates as model_validates
-from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
+from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, post_load
 
 from config import db
-
-from utils import TRANSACTION_TYPES
 
 class Budget(db.Model):
     """Model for the budget table."""
@@ -49,7 +47,7 @@ class Budget(db.Model):
 
 class BudgetSchema(Schema):
     id = fields.Int(dump_only=True)
-    amount = fields.Decimal(required=True, as_string=True, validate=validate.Range(min=0.01))
+    amount = fields.Decimal(required=True, as_string=True, validate=validate.Range(min=Decimal('0.01')))
     month = fields.Int(required=True, validate=validate.Range(min=1, max=12))
     year = fields.Int(required=True, validate=validate.Range(min=2000, max=2100))
     user_id = fields.Int(required=True)
