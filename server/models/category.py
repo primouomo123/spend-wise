@@ -1,8 +1,10 @@
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import validates as model_validates
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
 from config import db
+
+from user import User
 
 class Category(db.Model):
     """Category model for organizing transactions."""
@@ -14,6 +16,7 @@ class Category(db.Model):
 
     __table_args__ = (
         CheckConstraint("length(name) >= 1", name="category_name_min_length"),
+        UniqueConstraint("user_id", "name", name="unique_category_per_user"),
     )
 
     @model_validates('name')
@@ -28,7 +31,7 @@ class Category(db.Model):
 class CategorySchema(Schema):
     id = fields.Int(dump_only=True)
     name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
-    user_id = fields.Int(required=True)
+    user_id = fields.Int(dump_only=True)
 
     class Meta:
         unknown = RAISE
@@ -43,8 +46,10 @@ class CategorySchema(Schema):
     
     @schema_validates('name')
     def validate_name(self, value, **kwargs):
-        if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
-            raise ValidationError("Name must be between 1 and 100 characters long.")
+        user_id = self.context.get('user_id')
+        existing_category = Category.query.filter_by(user_id=user_id, name=value).first()
+        if existing_category:
+            raise ValidationError("Category name must be unique for the user.")
     
     @post_load
     def create_category(self, data, **kwargs):
