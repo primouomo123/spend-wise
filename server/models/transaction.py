@@ -9,6 +9,8 @@ from config import db
 
 from utils import TRANSACTION_TYPES
 
+from category import Category
+
 class Transaction(db.Model):
     """Transaction model for recording income and expenses."""
     __tablename__ = 'transactions'
@@ -57,6 +59,8 @@ class Transaction(db.Model):
     def validate_date(self, key, value):
         if not isinstance(value, date):
             raise ValueError(f"{key} must be a valid date.")
+        if value > date.today():
+            raise ValueError(f"{key} cannot be in the future.")
         return value
     
     @model_validates('description')
@@ -79,7 +83,7 @@ class TransactionSchema(Schema):
     transaction_type = fields.Str(required=True, validate=validate.OneOf(TRANSACTION_TYPES))
     date = fields.Date(required=True)
     description = fields.Str(required=True, validate=validate.Length(min=1, max=255))
-    user_id = fields.Int(required=True)
+    user_id = fields.Int(dump_only=True)
     category_id = fields.Int(required=True)
 
     class Meta:
@@ -119,11 +123,19 @@ class TransactionSchema(Schema):
     def validate_date(self, value, **kwargs):
         if not isinstance(value, date):
             raise ValidationError("Date must be a valid date.")
+        if value > date.today():
+            raise ValidationError("Date cannot be in the future.")
     
     @schema_validates('description')
     def validate_description(self, value, **kwargs):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 255):
             raise ValidationError("Description must be between 1 and 255 characters long.")
+    
+    @schema_validates('category_id')
+    def validate_category_id(self, value, **kwargs):
+        user_id = self.context.get('user_id')
+        if not isinstance(value, int) or not Category.query.filter_by(user_id=user_id, id=value).first():
+            raise ValidationError("Category ID must be a valid category ID that belongs to the user.")
     
     @post_load
     def make_transaction(self, data, **kwargs):
