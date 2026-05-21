@@ -46,6 +46,8 @@ class CategorySchema(Schema):
     
     @schema_validates('name')
     def validate_name(self, value, **kwargs):
+        if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
+            raise ValidationError("Category name must be between 1 and 100 characters long.")
         user_id = self.context.get('user_id')
         existing_category = Category.query.filter_by(user_id=user_id, name=value).first()
         if existing_category:
