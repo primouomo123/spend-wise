@@ -1,4 +1,5 @@
 import re
+from email_validator import validate_email, EmailNotValidError
 
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import validates as model_validates
@@ -48,17 +49,27 @@ class User(db.Model):
 
     @model_validates('username')
     def validate_username(self, key, value):
-        if not isinstance(value, str) or not USERNAME_REGEX.match(value):
+        if not isinstance(value, str):
+            raise ValueError(f"{key} must be a string.")
+        stripped_value = value.strip().lower()
+        if not USERNAME_REGEX.match(stripped_value):
             raise ValueError(f"{key} can only contain lowercase letters, numbers, and underscores.")
-        if len(value) < 3 or len(value) > 50:
+        if len(stripped_value) < 3 or len(stripped_value) > 50:
             raise ValueError(f"{key} must be between 3 and 50 characters long.")
-        return value
+        return stripped_value
     
     @model_validates('email')
-    def validate_email(self, key, value):
-        if not isinstance(value, str) or (len(value) < 6 or len(value) > 255):
+    def email_validation(self, key, value):
+        if not isinstance(value, str):
+            raise ValueError(f"{key} must be a string.")
+        stripped_value = value.strip().lower()
+        if len(stripped_value) < 6 or len(stripped_value) > 255:
             raise ValueError(f"{key} must be between 6 and 255 characters long.")
-        return value
+        try:
+            validate_email(stripped_value)
+        except EmailNotValidError as e:
+            raise ValueError(f"{key} is not a valid email address: {str(e)}")
+        return stripped_value
     
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
@@ -88,8 +99,6 @@ class UserSchema(Schema):
             data["username"] = data["username"].strip().lower()
         if "email" in data:
             data["email"] = data["email"].strip().lower()
-        if "password" in data:
-            data["password"] = data["password"].strip()
         return data
     
     @schema_validates('username')
@@ -100,7 +109,7 @@ class UserSchema(Schema):
             raise ValidationError("Username must be between 3 and 50 characters long.")
     
     @schema_validates('email')
-    def validate_unique_email(self, value, **kwargs):
+    def email_validation(self, value, **kwargs):
         if not isinstance(value, str) or (len(value) < 6 or len(value) > 255):
             raise ValidationError("Email must be between 6 and 255 characters long.")
             
