@@ -131,12 +131,6 @@ class TransactionSchema(Schema):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 255):
             raise ValidationError("Description must be between 1 and 255 characters long.")
     
-    @schema_validates('category_id')
-    def validate_category_id(self, value, **kwargs):
-        user_id = self.context.get('user_id')
-        if not isinstance(value, int) or not Category.query.filter_by(user_id=user_id, id=value).first():
-            raise ValidationError("Category ID must be a valid category ID that belongs to the user.")
-    
     @post_load
     def make_transaction(self, data, **kwargs):
         return Transaction(**data)

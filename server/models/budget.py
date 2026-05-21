@@ -1,10 +1,14 @@
 from decimal import Decimal, InvalidOperation
 
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import validates as model_validates
-from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, post_load
+from marshmallow import Schema, fields, validate, validates as schema_validates, validates_schema, ValidationError, RAISE, post_load
 
 from config import db
+
+from user import User
+from category import Category
+from utils import YEAR_FROM, YEAR_TO
 
 class Budget(db.Model):
     """Model for the budget table."""
@@ -20,7 +24,8 @@ class Budget(db.Model):
     __table_args__ = (
         CheckConstraint("amount > 0", name="positive_budget_amount"),
         CheckConstraint("month >= 1 AND month <= 12", name="valid_month"),
-        CheckConstraint("year >= 2000 AND year <= 2100", name="valid_year")
+        CheckConstraint(f"year >= {YEAR_FROM} AND year <= {YEAR_TO}", name="valid_year"),
+        UniqueConstraint('user_id', 'category_id', 'month', 'year', name='unique_budget_per_user_category_month_year')
     )
 
     @model_validates('amount')
@@ -41,8 +46,8 @@ class Budget(db.Model):
     
     @model_validates('year')
     def validate_year(self, key, value):
-        if not isinstance(value, int) or (value < 2000 or value > 2100):
-            raise ValueError(f"{key} must be an integer between 2000 and 2100.")
+        if not isinstance(value, int) or (value < YEAR_FROM or value > YEAR_TO):
+            raise ValueError(f"{key} must be an integer between {YEAR_FROM} and {YEAR_TO}.")
         return value
     
     def __repr__(self):
@@ -52,7 +57,7 @@ class BudgetSchema(Schema):
     id = fields.Int(dump_only=True)
     amount = fields.Decimal(required=True, as_string=True, validate=validate.Range(min=Decimal('0.01')))
     month = fields.Int(required=True, validate=validate.Range(min=1, max=12))
-    year = fields.Int(required=True, validate=validate.Range(min=2000, max=2100))
+    year = fields.Int(required=True, validate=validate.Range(min=YEAR_FROM, max=YEAR_TO))
     user_id = fields.Int(required=True)
     category_id = fields.Int(required=True)
 
@@ -72,13 +77,9 @@ class BudgetSchema(Schema):
     
     @schema_validates('year')
     def validate_year(self, value, **kwargs):
-        if value < 2000 or value > 2100:
-            raise ValidationError("Year must be between 2000 and 2100.")
+        if value < YEAR_FROM or value > YEAR_TO:
+            raise ValidationError(f"Year must be between {YEAR_FROM} and {YEAR_TO}.")
     
     @post_load
     def make_budget(self, data, **kwargs):
         return Budget(**data)
-
-# Remember to ensure the categories are unique per user and month/year combination, and that the amount is positive.
-# Also ensure the foreign keys (user_id and category_id) exist.
-# Should I validate dates in transaction model?
