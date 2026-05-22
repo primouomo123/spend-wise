@@ -100,9 +100,9 @@ class TransactionSchema(Schema):
     @pre_load
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
-        if "currency" in data:
+        if "currency" in data and isinstance(data["currency"], str):
             data["currency"] = data["currency"].strip().upper()
-        if "description" in data:
+        if "description" in data and isinstance(data["description"], str):
             data["description"] = data["description"].strip()
         return data
     
