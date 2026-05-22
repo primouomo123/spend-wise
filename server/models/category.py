@@ -39,10 +39,6 @@ class CategorySchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=1, max=100))
     user_id = fields.Int(dump_only=True)
 
-    user = fields.Nested(lambda: UserSchema(exclude=("categories",)), dump_only=True)
-    transactions = fields.Nested(lambda: TransactionSchema(exclude=("category",)), many=True, dump_only=True)
-    budgets = fields.Nested(lambda: BudgetSchema(exclude=("category",)), many=True, dump_only=True)
-
     class Meta:
         unknown = RAISE
         ordered = True
@@ -62,3 +58,9 @@ class CategorySchema(Schema):
     @post_load
     def create_category(self, data, **kwargs):
         return Category(**data)
+
+
+class CategoryDetailSchema(CategorySchema):
+    user = fields.Nested(lambda: UserSchema(exclude=("categories",)), dump_only=True)
+    transactions = fields.Nested(lambda: TransactionSchema(exclude=("category",)), many=True, dump_only=True)
+    budgets = fields.Nested(lambda: BudgetSchema(exclude=("category",)), many=True, dump_only=True)

@@ -6,9 +6,10 @@ from marshmallow import Schema, fields, validate, validates as schema_validates,
 
 from config import db
 
-from user import User
-from category import Category
 from utils import YEAR_FROM, YEAR_TO
+
+from .user import UserSchema
+from .category import CategorySchema
 
 class Budget(db.Model):
     """Model for the budget table."""
@@ -50,6 +51,9 @@ class Budget(db.Model):
             raise ValueError(f"{key} must be an integer between {YEAR_FROM} and {YEAR_TO}.")
         return value
     
+    user = db.relationship('User', back_populates='budgets', lazy='selectin')
+    category = db.relationship('Category', back_populates='budgets', lazy='selectin')
+    
     def __repr__(self):
         return f"<Budget id={self.id} amount={self.amount} month={self.month} year={self.year} user_id={self.user_id} category_id={self.category_id}>"
 
@@ -83,3 +87,8 @@ class BudgetSchema(Schema):
     @post_load
     def make_budget(self, data, **kwargs):
         return Budget(**data)
+
+
+class BudgetDetailSchema(BudgetSchema):
+    user = fields.Nested(lambda: UserSchema(exclude=("budgets",)), dump_only=True)
+    category = fields.Nested(lambda: CategorySchema(exclude=("budgets",)), dump_only=True)

@@ -90,9 +90,6 @@ class TransactionSchema(Schema):
     user_id = fields.Int(dump_only=True)
     category_id = fields.Int(required=True)
 
-    user = fields.Nested(lambda: UserSchema(exclude=("transactions",)), dump_only=True)
-    category = fields.Nested(lambda: CategorySchema(exclude=("transactions",)), dump_only=True)
-
     class Meta:
         unknown = RAISE
         ordered = True
@@ -141,3 +138,8 @@ class TransactionSchema(Schema):
     @post_load
     def make_transaction(self, data, **kwargs):
         return Transaction(**data)
+
+
+class TransactionDetailSchema(TransactionSchema):
+    user = fields.Nested(lambda: UserSchema(exclude=("transactions",)), dump_only=True)
+    category = fields.Nested(lambda: CategorySchema(exclude=("transactions",)), dump_only=True)

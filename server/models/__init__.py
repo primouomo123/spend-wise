@@ -1,4 +1,4 @@
-from .user import User, UserSchema
-from .category import Category, CategorySchema
-from .transaction import Transaction, TransactionSchema
-from .budget import Budget, BudgetSchema
+from .user import User, UserSchema, UserDetailSchema
+from .category import Category, CategorySchema, CategoryDetailSchema
+from .transaction import Transaction, TransactionSchema, TransactionDetailSchema
+from .budget import Budget, BudgetSchema, BudgetDetailSchema

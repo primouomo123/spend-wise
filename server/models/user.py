@@ -97,10 +97,6 @@ class UserSchema(Schema):
         validate.Regexp(PASSWORD_REGEX, error="Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.")
     ])
 
-    categories = fields.Nested(lambda: CategorySchema(exclude=('user',)), many=True, dump_only=True)
-    transactions = fields.Nested(lambda: TransactionSchema(exclude=('user',)), many=True, dump_only=True)
-    budgets = fields.Nested(lambda: BudgetSchema(exclude=('user',)), many=True, dump_only=True)
-
     class Meta:
         unknown = RAISE
         ordered = True
@@ -138,3 +134,9 @@ class UserSchema(Schema):
         )
         user.password_hash = data['password']  # This will trigger the password hashing
         return user
+
+
+class UserDetailSchema(UserSchema):
+    categories = fields.Nested(lambda: CategorySchema(exclude=('user',)), many=True, dump_only=True)
+    transactions = fields.Nested(lambda: TransactionSchema(exclude=('user',)), many=True, dump_only=True)
+    budgets = fields.Nested(lambda: BudgetSchema(exclude=('user',)), many=True, dump_only=True)
