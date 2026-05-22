@@ -9,7 +9,8 @@ from config import db
 
 from utils import TRANSACTION_TYPES
 
-from category import Category
+from .user import UserSchema
+from .category import CategorySchema
 
 class Transaction(db.Model):
     """Transaction model for recording income and expenses."""
@@ -69,6 +70,9 @@ class Transaction(db.Model):
             raise ValueError(f"{key} must be between 1 and 255 characters long.")
         return value
     
+    user = db.relationship('User', back_populates='transactions', lazy='selectin')
+    category = db.relationship('Category', back_populates='transactions', lazy='selectin')
+    
     def __repr__(self):
         return (f"<Transaction id={self.id} amount={self.amount} currency='{self.currency}' "
                 f"amount_usd={self.amount_usd} transaction_type='{self.transaction_type}' "
@@ -85,6 +89,9 @@ class TransactionSchema(Schema):
     description = fields.Str(required=True, validate=validate.Length(min=1, max=255))
     user_id = fields.Int(dump_only=True)
     category_id = fields.Int(required=True)
+
+    user = fields.Nested(lambda: UserSchema(exclude=("transactions",)), dump_only=True)
+    category = fields.Nested(lambda: CategorySchema(exclude=("transactions",)), dump_only=True)
 
     class Meta:
         unknown = RAISE
