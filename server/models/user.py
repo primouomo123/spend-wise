@@ -7,6 +7,9 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
 from config import db, bcrypt
+from .category import CategorySchema
+from .transaction import TransactionSchema
+from .budget import BudgetSchema
 
 USERNAME_REGEX = re.compile(r"^[a-z0-9_]+$")
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$")
@@ -71,12 +74,17 @@ class User(db.Model):
             raise ValueError(f"{key} is not a valid email address: {str(e)}")
         return stripped_value
     
+    categories = db.relationship('Category', back_populates='user', cascade='all, delete-orphan', lazy = 'selectin')
+    transactions = db.relationship('Transaction', back_populates='user', cascade='all, delete-orphan', lazy = 'selectin')
+    budgets = db.relationship('Budget', back_populates='user', cascade='all, delete-orphan', lazy = 'selectin')
+    
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
 
         
 
 class UserSchema(Schema):
+    """Marshmallow schema for validating, serializing, and deserializing User data."""
     id = fields.Int(dump_only=True)
     username = fields.Str(required=True, validate=[
         validate.Length(min=3, max=50),
@@ -87,6 +95,10 @@ class UserSchema(Schema):
         validate.Length(min=8),
         validate.Regexp(PASSWORD_REGEX, error="Password must contain at least one lowercase letter, one uppercase letter, one digit, and one special character.")
     ])
+
+    categories = fields.Nested(lambda: CategorySchema(exclude=('user',)), many=True, dump_only=True)
+    transactions = fields.Nested(lambda: TransactionSchema(exclude=('user',)), many=True, dump_only=True)
+    budgets = fields.Nested(lambda: BudgetSchema(exclude=('user',)), many=True, dump_only=True)
 
     class Meta:
         unknown = RAISE
@@ -102,7 +114,7 @@ class UserSchema(Schema):
         return data
     
     @schema_validates('username')
-    def validate_unique_username(self, value, **kwargs):
+    def validate_username(self, value, **kwargs):
         if not isinstance(value, str) or not USERNAME_REGEX.match(value):
             raise ValidationError("Username can only contain lowercase letters, numbers, and underscores.")
         if len(value) < 3 or len(value) > 50:
