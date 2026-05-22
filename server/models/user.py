@@ -7,6 +7,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
 from config import db, bcrypt
+
 from .category import CategorySchema
 from .transaction import TransactionSchema
 from .budget import BudgetSchema

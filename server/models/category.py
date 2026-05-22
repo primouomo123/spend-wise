@@ -4,8 +4,6 @@ from marshmallow import Schema, fields, validate, validates as schema_validates,
 
 from config import db
 
-from user import User
-
 class Category(db.Model):
     """Category model for organizing transactions."""
     __tablename__ = 'categories'
