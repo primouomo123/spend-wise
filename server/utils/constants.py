@@ -1,1 +1,3 @@
 TRANSACTION_TYPES = ('income', 'expense')
+YEAR_FROM = 2000
+YEAR_TO = 2100

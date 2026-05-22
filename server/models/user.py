@@ -1,4 +1,5 @@
 import re
+from email_validator import validate_email, EmailNotValidError
 
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import validates as model_validates
@@ -6,6 +7,10 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
 from config import db, bcrypt
+
+from .category import CategorySchema
+from .transaction import TransactionSchema
+from .budget import BudgetSchema
 
 USERNAME_REGEX = re.compile(r"^[a-z0-9_]+$")
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$")
@@ -48,21 +53,39 @@ class User(db.Model):
 
     @model_validates('username')
     def validate_username(self, key, value):
-        if not isinstance(value, str) or not USERNAME_REGEX.match(value):
+        if not isinstance(value, str):
+            raise ValueError(f"{key} must be a string.")
+        stripped_value = value.strip().lower()
+        if not USERNAME_REGEX.match(stripped_value):
             raise ValueError(f"{key} can only contain lowercase letters, numbers, and underscores.")
-        if len(value) < 3 or len(value) > 50:
+        if len(stripped_value) < 3 or len(stripped_value) > 50:
             raise ValueError(f"{key} must be between 3 and 50 characters long.")
-        return value
+        return stripped_value
     
     @model_validates('email')
-    def validate_email(self, key, value):
-        if not isinstance(value, str) or (len(value) < 6 or len(value) > 255):
+    def email_validation(self, key, value):
+        if not isinstance(value, str):
+            raise ValueError(f"{key} must be a string.")
+        stripped_value = value.strip().lower()
+        if len(stripped_value) < 6 or len(stripped_value) > 255:
             raise ValueError(f"{key} must be between 6 and 255 characters long.")
-        return value        
+        try:
+            validate_email(stripped_value)
+        except EmailNotValidError as e:
+            raise ValueError(f"{key} is not a valid email address: {str(e)}")
+        return stripped_value
+    
+    categories = db.relationship('Category', back_populates='user', cascade='all, delete-orphan', lazy = 'selectin')
+    transactions = db.relationship('Transaction', back_populates='user', cascade='all, delete-orphan', lazy = 'selectin')
+    budgets = db.relationship('Budget', back_populates='user', cascade='all, delete-orphan', lazy = 'selectin')
+    
+    def __repr__(self):
+        return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
 
         
 
 class UserSchema(Schema):
+    """Marshmallow schema for validating, serializing, and deserializing User data."""
     id = fields.Int(dump_only=True)
     username = fields.Str(required=True, validate=[
         validate.Length(min=3, max=50),
@@ -81,26 +104,27 @@ class UserSchema(Schema):
     @pre_load
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
-        if "username" in data:
+        if "username" in data and isinstance(data["username"], str):
             data["username"] = data["username"].strip().lower()
-        if "email" in data:
+        if "email" in data and isinstance(data["email"], str):
             data["email"] = data["email"].strip().lower()
-        if "password" in data:
-            data["password"] = data["password"].strip()
         return data
     
     @schema_validates('username')
-    def validate_unique_username(self, value, **kwargs):
+    def validate_username(self, value, **kwargs):
         if not isinstance(value, str) or not USERNAME_REGEX.match(value):
             raise ValidationError("Username can only contain lowercase letters, numbers, and underscores.")
         if len(value) < 3 or len(value) > 50:
             raise ValidationError("Username must be between 3 and 50 characters long.")
     
     @schema_validates('email')
-    def validate_unique_email(self, value, **kwargs):
+    def email_validation(self, value, **kwargs):
         if not isinstance(value, str) or (len(value) < 6 or len(value) > 255):
             raise ValidationError("Email must be between 6 and 255 characters long.")
-            
+        try:
+            validate_email(value)
+        except EmailNotValidError as e:
+            raise ValidationError(f"Email is not valid: {str(e)}")
 
     @post_load
     def create_user(self, data, **kwargs):
@@ -110,3 +134,9 @@ class UserSchema(Schema):
         )
         user.password_hash = data['password']  # This will trigger the password hashing
         return user
+
+
+class UserDetailSchema(UserSchema):
+    categories = fields.Nested(lambda: CategorySchema(exclude=('user',)), many=True, dump_only=True)
+    transactions = fields.Nested(lambda: TransactionSchema(exclude=('user',)), many=True, dump_only=True)
+    budgets = fields.Nested(lambda: BudgetSchema(exclude=('user',)), many=True, dump_only=True)

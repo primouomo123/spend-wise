@@ -9,6 +9,9 @@ from config import db
 
 from utils import TRANSACTION_TYPES
 
+from .user import UserSchema
+from .category import CategorySchema
+
 class Transaction(db.Model):
     """Transaction model for recording income and expenses."""
     __tablename__ = 'transactions'
@@ -57,6 +60,8 @@ class Transaction(db.Model):
     def validate_date(self, key, value):
         if not isinstance(value, date):
             raise ValueError(f"{key} must be a valid date.")
+        if value > date.today():
+            raise ValueError(f"{key} cannot be in the future.")
         return value
     
     @model_validates('description')
@@ -64,6 +69,15 @@ class Transaction(db.Model):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 255):
             raise ValueError(f"{key} must be between 1 and 255 characters long.")
         return value
+    
+    user = db.relationship('User', back_populates='transactions', lazy='selectin')
+    category = db.relationship('Category', back_populates='transactions', lazy='selectin')
+    
+    def __repr__(self):
+        return (f"<Transaction id={self.id} amount={self.amount} currency='{self.currency}' "
+                f"amount_usd={self.amount_usd} transaction_type='{self.transaction_type}' "
+                f"date={self.date} description='{self.description}' user_id={self.user_id} "
+                f"category_id={self.category_id}>")
 
 class TransactionSchema(Schema):
     id = fields.Int(dump_only=True)
@@ -73,7 +87,7 @@ class TransactionSchema(Schema):
     transaction_type = fields.Str(required=True, validate=validate.OneOf(TRANSACTION_TYPES))
     date = fields.Date(required=True)
     description = fields.Str(required=True, validate=validate.Length(min=1, max=255))
-    user_id = fields.Int(required=True)
+    user_id = fields.Int(dump_only=True)
     category_id = fields.Int(required=True)
 
     class Meta:
@@ -83,9 +97,9 @@ class TransactionSchema(Schema):
     @pre_load
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
-        if "currency" in data:
+        if "currency" in data and isinstance(data["currency"], str):
             data["currency"] = data["currency"].strip().upper()
-        if "description" in data:
+        if "description" in data and isinstance(data["description"], str):
             data["description"] = data["description"].strip()
         return data
     
@@ -113,6 +127,8 @@ class TransactionSchema(Schema):
     def validate_date(self, value, **kwargs):
         if not isinstance(value, date):
             raise ValidationError("Date must be a valid date.")
+        if value > date.today():
+            raise ValidationError("Date cannot be in the future.")
     
     @schema_validates('description')
     def validate_description(self, value, **kwargs):
@@ -122,3 +138,8 @@ class TransactionSchema(Schema):
     @post_load
     def make_transaction(self, data, **kwargs):
         return Transaction(**data)
+
+
+class TransactionDetailSchema(TransactionSchema):
+    user = fields.Nested(lambda: UserSchema(exclude=("transactions",)), dump_only=True)
+    category = fields.Nested(lambda: CategorySchema(exclude=("transactions",)), dump_only=True)
