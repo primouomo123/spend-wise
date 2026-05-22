@@ -108,9 +108,9 @@ class UserSchema(Schema):
     @pre_load
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
-        if "username" in data:
+        if "username" in data and isinstance(data["username"], str):
             data["username"] = data["username"].strip().lower()
-        if "email" in data:
+        if "email" in data and isinstance(data["email"], str):
             data["email"] = data["email"].strip().lower()
         return data
     
@@ -125,7 +125,10 @@ class UserSchema(Schema):
     def email_validation(self, value, **kwargs):
         if not isinstance(value, str) or (len(value) < 6 or len(value) > 255):
             raise ValidationError("Email must be between 6 and 255 characters long.")
-            
+        try:
+            validate_email(value)
+        except EmailNotValidError as e:
+            raise ValidationError(f"Email is not valid: {str(e)}")
 
     @post_load
     def create_user(self, data, **kwargs):
