@@ -9,9 +9,6 @@ from config import db
 
 from utils import TRANSACTION_TYPES
 
-from .user import UserSchema
-from .category import CategorySchema
-
 class Transaction(db.Model):
     """Transaction model for recording income and expenses."""
     __tablename__ = 'transactions'
@@ -141,5 +138,5 @@ class TransactionSchema(Schema):
 
 
 class TransactionDetailSchema(TransactionSchema):
-    user = fields.Nested(lambda: UserSchema(exclude=("transactions",)), dump_only=True)
-    category = fields.Nested(lambda: CategorySchema(exclude=("transactions",)), dump_only=True)
+    user = fields.Nested('UserSchema', exclude=("transactions",), dump_only=True)
+    category = fields.Nested('CategorySchema', exclude=("transactions",), dump_only=True)

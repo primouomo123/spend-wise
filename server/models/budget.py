@@ -8,9 +8,6 @@ from config import db
 
 from utils import YEAR_FROM, YEAR_TO
 
-from .user import UserSchema
-from .category import CategorySchema
-
 class Budget(db.Model):
     """Model for the budget table."""
     __tablename__ = 'budgets'
@@ -90,5 +87,5 @@ class BudgetSchema(Schema):
 
 
 class BudgetDetailSchema(BudgetSchema):
-    user = fields.Nested(lambda: UserSchema(exclude=("budgets",)), dump_only=True)
-    category = fields.Nested(lambda: CategorySchema(exclude=("budgets",)), dump_only=True)
+    user = fields.Nested('UserSchema', exclude=("budgets",), dump_only=True)
+    category = fields.Nested('CategorySchema', exclude=("budgets",), dump_only=True)

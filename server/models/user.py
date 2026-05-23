@@ -8,10 +8,6 @@ from marshmallow import Schema, fields, validate, validates as schema_validates,
 
 from config import db, bcrypt
 
-from .category import CategorySchema
-from .transaction import TransactionSchema
-from .budget import BudgetSchema
-
 USERNAME_REGEX = re.compile(r"^[a-z0-9_]+$")
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$")
 
@@ -137,6 +133,6 @@ class UserSchema(Schema):
 
 
 class UserDetailSchema(UserSchema):
-    categories = fields.Nested(lambda: CategorySchema(exclude=('user',)), many=True, dump_only=True)
-    transactions = fields.Nested(lambda: TransactionSchema(exclude=('user',)), many=True, dump_only=True)
-    budgets = fields.Nested(lambda: BudgetSchema(exclude=('user',)), many=True, dump_only=True)
+    categories = fields.Nested('CategorySchema', exclude=('user',), many=True, dump_only=True)
+    transactions = fields.Nested('TransactionSchema', exclude=('user',), many=True, dump_only=True)
+    budgets = fields.Nested('BudgetSchema', exclude=('user',), many=True, dump_only=True)

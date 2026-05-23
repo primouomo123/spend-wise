@@ -4,10 +4,6 @@ from marshmallow import Schema, fields, validate, validates as schema_validates,
 
 from config import db
 
-from .user import UserSchema
-from .transaction import TransactionSchema
-from .budget import BudgetSchema
-
 class Category(db.Model):
     """Category model for organizing transactions."""
     __tablename__ = 'categories'
@@ -61,6 +57,6 @@ class CategorySchema(Schema):
 
 
 class CategoryDetailSchema(CategorySchema):
-    user = fields.Nested(lambda: UserSchema(exclude=("categories",)), dump_only=True)
-    transactions = fields.Nested(lambda: TransactionSchema(exclude=("category",)), many=True, dump_only=True)
-    budgets = fields.Nested(lambda: BudgetSchema(exclude=("category",)), many=True, dump_only=True)
+    user = fields.Nested('UserSchema', exclude=("categories",), dump_only=True)
+    transactions = fields.Nested('TransactionSchema', exclude=("category",), many=True, dump_only=True)
+    budgets = fields.Nested('BudgetSchema', exclude=("category",), many=True, dump_only=True)
