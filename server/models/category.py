@@ -23,6 +23,15 @@ class Category(db.Model):
             raise ValueError(f"{key} must be between 1 and 100 characters long.")
         return value
     
+    @model_validates('user_id')
+    def validate_user_id(self, key, value):
+        from .user import User  # Avoid circular import
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{key} must be a positive integer.")
+        if not User.query.get(value):
+            raise ValueError(f"User with id {value} does not exist.")
+        return value
+    
     user = db.relationship('User', back_populates='categories', lazy='selectin')
     transactions = db.relationship('Transaction', back_populates='category', cascade='all, delete-orphan', lazy='selectin')
     budgets = db.relationship('Budget', back_populates='category', cascade='all, delete-orphan', lazy='selectin')

@@ -48,6 +48,24 @@ class Budget(db.Model):
             raise ValueError(f"{key} must be an integer between {YEAR_FROM} and {YEAR_TO}.")
         return value
     
+    @model_validates('user_id')
+    def validate_user_id(self, key, value):
+        from .user import User  # Avoid circular import
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{key} must be a positive integer.")
+        if not User.query.get(value):
+            raise ValueError(f"User with id {value} does not exist.")
+        return value
+    
+    @model_validates('category_id')
+    def validate_category_id(self, key, value):
+        from .category import Category  # Avoid circular import
+        if not isinstance(value, int) or value <= 0:
+            raise ValueError(f"{key} must be a positive integer.")
+        if not Category.query.get(value):
+            raise ValueError(f"Category with id {value} does not exist.")
+        return value
+    
     user = db.relationship('User', back_populates='budgets', lazy='selectin')
     category = db.relationship('Category', back_populates='budgets', lazy='selectin')
     
@@ -80,6 +98,14 @@ class BudgetSchema(Schema):
     def validate_year(self, value, **kwargs):
         if value < YEAR_FROM or value > YEAR_TO:
             raise ValidationError(f"Year must be between {YEAR_FROM} and {YEAR_TO}.")
+    
+    @schema_validates('category_id')
+    def validate_category_id(self, value, **kwargs):
+        from .category import Category  # Avoid circular import
+        if not isinstance(value, int) or value <= 0:
+            raise ValidationError("category_id must be a positive integer.")
+        if not Category.query.get(value):
+            raise ValidationError(f"Category with id {value} does not exist.")
     
     @post_load
     def make_budget(self, data, **kwargs):
