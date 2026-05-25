@@ -1,7 +1,7 @@
 from decimal import Decimal, InvalidOperation
 from datetime import date
 
-from sqlalchemy import CheckConstraint, select
+from sqlalchemy import CheckConstraint, select, exists
 from sqlalchemy.orm import validates as model_validates
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
@@ -91,9 +91,10 @@ class TransactionSchema(Schema):
         unknown = RAISE
         ordered = True
     
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user_id=None, transaction_id=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = user
+        self.user_id = user_id
+        self.transaction_id = transaction_id
     
     @pre_load
     def preprocess_input(self, data, **kwargs):
@@ -142,16 +143,23 @@ class TransactionSchema(Schema):
         if not isinstance(value, int) or value <= 0:
             raise ValidationError("category_id must be a positive integer.")
         
-        if not self.user:
+        if not self.user_id:
             raise ValidationError("Authenticated user is required to validate category_id.")
         
-        stmt = select(Category.id).where(Category.id == value, Category.user_id == self.user.id)
+        conditions = [Category.id == value, Category.user_id == self.user_id]
+
+        stmt = select(exists().where(*conditions))
 
         if not db.session.scalar(stmt):
-            raise ValidationError(f"Category with id {value} does not exist for the authenticated user.")
+            raise ValidationError("Category not found or does not belong to the authenticated user.")
     
     @post_load
     def make_transaction(self, data, **kwargs):
+        if not self.user_id:
+            raise ValidationError("Authenticated user is required to create a Transaction.")
+        data["user_id"] = self.user_id
+        if self.transaction_id:
+            return data  # For updates, we just return the validated data
         return Transaction(**data)
 
 

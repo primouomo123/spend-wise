@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, UniqueConstraint, select
+from sqlalchemy import CheckConstraint, UniqueConstraint, select, exists
 from sqlalchemy.orm import validates as model_validates
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
@@ -21,16 +21,7 @@ class Category(db.Model):
     def validate_name(self, key, value):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
             raise ValueError(f"{key} must be between 1 and 100 characters long.")
-        return value
-    
-    @model_validates('user_id')
-    def validate_user_id(self, key, value):
-        from .user import User  # Avoid circular import
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError(f"{key} must be a positive integer.")
-        if not User.query.get(value):
-            raise ValueError(f"User with id {value} does not exist.")
-        return value
+        return value.strip()
     
     user = db.relationship('User', back_populates='categories', lazy='selectin')
     transactions = db.relationship('Transaction', back_populates='category', cascade='all, delete-orphan', lazy='selectin')
@@ -48,10 +39,10 @@ class CategorySchema(Schema):
         unknown = RAISE
         ordered = True
     
-    def __init__(self, *args, user=None, category=None, **kwargs):
+    def __init__(self, *args, user_id=None, category_id=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = user
-        self.category = category
+        self.user_id = user_id
+        self.category_id = category_id
     
     @pre_load
     def preprocess_input(self, data, **kwargs):
@@ -65,21 +56,26 @@ class CategorySchema(Schema):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
             raise ValidationError("Category name must be between 1 and 100 characters long.")
         
-        if not self.user:
+        if not self.user_id:
             raise ValidationError("Authenticated user is required to validate category name uniqueness.")
         
-        stmt = select(Category.id).where(Category.user_id == self.user.id, Category.name == value)
+        conditions = [Category.name == value, Category.user_id == self.user_id]
 
-        if self.category:
-            stmt = stmt.where(Category.id != self.category.id)
+        if self.category_id:
+            conditions.append(Category.id != self.category_id)
+        
+        stmt = select(exists().where(*conditions))
+
         if db.session.scalar(stmt):
-            raise ValidationError("You already have a category with this name. Please choose a different name.")
+            raise ValidationError("You already have a category with this name.")
     
     @post_load
     def create_category(self, data, **kwargs):
-        if not self.user:
+        if not self.user_id:
             raise ValidationError("Authenticated user is required to create a Category.")
-        data["user_id"] = self.user.id
+        data["user_id"] = self.user_id
+        if self.category_id:
+            return data  # For updates, we just return the validated data
         return Category(**data)
 
 

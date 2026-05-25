@@ -1,7 +1,7 @@
 import re
 from email_validator import validate_email, EmailNotValidError
 
-from sqlalchemy import CheckConstraint, select
+from sqlalchemy import CheckConstraint, select, exists
 from sqlalchemy.orm import validates as model_validates
 from sqlalchemy.ext.hybrid import hybrid_property
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
@@ -97,9 +97,9 @@ class UserSchema(Schema):
         unknown = RAISE
         ordered = True
     
-    def __init__(self, *args, user=None, **kwargs):
+    def __init__(self, *args, user_id=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.user = user
+        self.user_id = user_id
     
     @pre_load
     def preprocess_input(self, data, **kwargs):
@@ -117,14 +117,14 @@ class UserSchema(Schema):
         if len(value) < 3 or len(value) > 50:
             raise ValidationError("Username must be between 3 and 50 characters long.")
         
-        stmt = select(User.id).where(User.username == value)
+        conditions = [User.username == value]
 
-        if self.user:
-            stmt = stmt.where(User.id != self.user.id)  
+        if self.user_id:
+            conditions.append(User.id != self.user_id)
+        
+        stmt = select(exists().where(*conditions))
         if db.session.scalar(stmt):
             raise ValidationError("Username is already taken.")
-            
-
     
     @schema_validates('email')
     def email_validation(self, value, **kwargs):
@@ -135,15 +135,20 @@ class UserSchema(Schema):
         except EmailNotValidError as e:
             raise ValidationError(f"Email is not valid: {str(e)}")
         
-        stmt = select(User.id).where(User.email == value)
+        conditions = [User.email == value]
 
-        if self.user:
-            stmt = stmt.where(User.id != self.user.id)
+        if self.user_id:
+            conditions.append(User.id != self.user_id)
+        
+        stmt = select(exists().where(*conditions))
+
         if db.session.scalar(stmt):
             raise ValidationError("Email is already registered.")
 
     @post_load
     def create_user(self, data, **kwargs):
+        if self.user_id:
+            return data  # For updates, we just return the validated data
         user = User(
             username=data['username'],
             email=data['email']
