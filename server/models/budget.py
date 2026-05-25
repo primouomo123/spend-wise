@@ -1,6 +1,6 @@
 from decimal import Decimal, InvalidOperation
 
-from sqlalchemy import CheckConstraint, UniqueConstraint
+from sqlalchemy import CheckConstraint, UniqueConstraint, select
 from sqlalchemy.orm import validates as model_validates
 from marshmallow import Schema, fields, validate, validates as schema_validates, validates_schema, ValidationError, RAISE, post_load
 
@@ -48,24 +48,6 @@ class Budget(db.Model):
             raise ValueError(f"{key} must be an integer between {YEAR_FROM} and {YEAR_TO}.")
         return value
     
-    @model_validates('user_id')
-    def validate_user_id(self, key, value):
-        from .user import User  # Avoid circular import
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError(f"{key} must be a positive integer.")
-        if not User.query.get(value):
-            raise ValueError(f"User with id {value} does not exist.")
-        return value
-    
-    @model_validates('category_id')
-    def validate_category_id(self, key, value):
-        from .category import Category  # Avoid circular import
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError(f"{key} must be a positive integer.")
-        if not Category.query.get(value):
-            raise ValueError(f"Category with id {value} does not exist.")
-        return value
-    
     user = db.relationship('User', back_populates='budgets', lazy='selectin')
     category = db.relationship('Category', back_populates='budgets', lazy='selectin')
     
@@ -77,12 +59,17 @@ class BudgetSchema(Schema):
     amount = fields.Decimal(required=True, as_string=True, validate=validate.Range(min=Decimal('0.01')))
     month = fields.Int(required=True, validate=validate.Range(min=1, max=12))
     year = fields.Int(required=True, validate=validate.Range(min=YEAR_FROM, max=YEAR_TO))
-    user_id = fields.Int(required=True)
+    user_id = fields.Int(dump_only=True)
     category_id = fields.Int(required=True)
 
     class Meta:
         unknown = RAISE
         ordered = True
+    
+    def __init__(self, *args, user=None, budget=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        self.budget = budget
     
     @schema_validates('amount')
     def validate_amount(self, value, **kwargs):
@@ -99,13 +86,22 @@ class BudgetSchema(Schema):
         if value < YEAR_FROM or value > YEAR_TO:
             raise ValidationError(f"Year must be between {YEAR_FROM} and {YEAR_TO}.")
     
-    @schema_validates('category_id')
-    def validate_category_id(self, value, **kwargs):
-        from .category import Category  # Avoid circular import
-        if not isinstance(value, int) or value <= 0:
-            raise ValidationError("category_id must be a positive integer.")
-        if not Category.query.get(value):
-            raise ValidationError(f"Category with id {value} does not exist.")
+    @validates_schema
+    def validate_unique_budget(self, data, **kwargs):
+        if not self.user:
+            raise ValidationError("Authenticated user is required to validate unique budget constraint.")
+        
+        stmt = select(Budget.id).where(
+            Budget.user_id == self.user.id,
+            Budget.category_id == data['category_id'],
+            Budget.month == data['month'],
+            Budget.year == data['year']
+        )
+
+        if self.budget:
+            stmt = stmt.where(Budget.id != self.budget.id)
+        if db.session.scalar(stmt):
+            raise ValidationError("You already have a budget for this category and month. Please update the existing budget instead of creating a new one.")
     
     @post_load
     def make_budget(self, data, **kwargs):

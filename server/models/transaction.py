@@ -1,7 +1,7 @@
 from decimal import Decimal, InvalidOperation
 from datetime import date
 
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, select
 from sqlalchemy.orm import validates as model_validates
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
@@ -67,24 +67,6 @@ class Transaction(db.Model):
             raise ValueError(f"{key} must be between 1 and 255 characters long.")
         return value
     
-    @model_validates('user_id')
-    def validate_user_id(self, key, value):
-        from .user import User  # Avoid circular import
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError(f"{key} must be a positive integer.")
-        if not User.query.get(value):
-            raise ValueError(f"User with id {value} does not exist.")
-        return value
-    
-    @model_validates('category_id')
-    def validate_category_id(self, key, value):
-        from .category import Category  # Avoid circular import
-        if not isinstance(value, int) or value <= 0:
-            raise ValueError(f"{key} must be a positive integer.")
-        if not Category.query.get(value):
-            raise ValueError(f"Category with id {value} does not exist.")
-        return value
-    
     user = db.relationship('User', back_populates='transactions', lazy='selectin')
     category = db.relationship('Category', back_populates='transactions', lazy='selectin')
     
@@ -108,6 +90,10 @@ class TransactionSchema(Schema):
     class Meta:
         unknown = RAISE
         ordered = True
+    
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
     
     @pre_load
     def preprocess_input(self, data, **kwargs):
@@ -155,8 +141,14 @@ class TransactionSchema(Schema):
         from .category import Category  # Avoid circular import
         if not isinstance(value, int) or value <= 0:
             raise ValidationError("category_id must be a positive integer.")
-        if not Category.query.get(value):
-            raise ValidationError(f"Category with id {value} does not exist.")
+        
+        if not self.user:
+            raise ValidationError("Authenticated user is required to validate category_id.")
+        
+        stmt = select(Category.id).where(Category.id == value, Category.user_id == self.user.id)
+
+        if not db.session.scalar(stmt):
+            raise ValidationError(f"Category with id {value} does not exist for the authenticated user.")
     
     @post_load
     def make_transaction(self, data, **kwargs):

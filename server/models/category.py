@@ -1,4 +1,4 @@
-from sqlalchemy import CheckConstraint, UniqueConstraint
+from sqlalchemy import CheckConstraint, UniqueConstraint, select
 from sqlalchemy.orm import validates as model_validates
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
@@ -48,6 +48,11 @@ class CategorySchema(Schema):
         unknown = RAISE
         ordered = True
     
+    def __init__(self, *args, user=None, category=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user = user
+        self.category = category
+    
     @pre_load
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
@@ -59,9 +64,22 @@ class CategorySchema(Schema):
     def validate_name(self, value, **kwargs):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
             raise ValidationError("Category name must be between 1 and 100 characters long.")
+        
+        if not self.user:
+            raise ValidationError("Authenticated user is required to validate category name uniqueness.")
+        
+        stmt = select(Category.id).where(Category.user_id == self.user.id, Category.name == value)
+
+        if self.category:
+            stmt = stmt.where(Category.id != self.category.id)
+        if db.session.scalar(stmt):
+            raise ValidationError("You already have a category with this name. Please choose a different name.")
     
     @post_load
     def create_category(self, data, **kwargs):
+        if not self.user:
+            raise ValidationError("Authenticated user is required to create a Category.")
+        data["user_id"] = self.user.id
         return Category(**data)
 
 
