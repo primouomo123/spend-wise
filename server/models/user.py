@@ -1,16 +1,12 @@
 import re
 from email_validator import validate_email, EmailNotValidError
 
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, select, exists
 from sqlalchemy.orm import validates as model_validates
 from sqlalchemy.ext.hybrid import hybrid_property
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
 from config import db, bcrypt
-
-from .category import CategorySchema
-from .transaction import TransactionSchema
-from .budget import BudgetSchema
 
 USERNAME_REGEX = re.compile(r"^[a-z0-9_]+$")
 PASSWORD_REGEX = re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).+$")
@@ -101,6 +97,10 @@ class UserSchema(Schema):
         unknown = RAISE
         ordered = True
     
+    def __init__(self, *args, user_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_id = user_id
+    
     @pre_load
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
@@ -116,6 +116,15 @@ class UserSchema(Schema):
             raise ValidationError("Username can only contain lowercase letters, numbers, and underscores.")
         if len(value) < 3 or len(value) > 50:
             raise ValidationError("Username must be between 3 and 50 characters long.")
+        
+        conditions = [User.username == value]
+
+        if self.user_id:
+            conditions.append(User.id != self.user_id)
+        
+        stmt = select(exists().where(*conditions))
+        if db.session.scalar(stmt):
+            raise ValidationError("Username is already taken.")
     
     @schema_validates('email')
     def email_validation(self, value, **kwargs):
@@ -125,9 +134,21 @@ class UserSchema(Schema):
             validate_email(value)
         except EmailNotValidError as e:
             raise ValidationError(f"Email is not valid: {str(e)}")
+        
+        conditions = [User.email == value]
+
+        if self.user_id:
+            conditions.append(User.id != self.user_id)
+        
+        stmt = select(exists().where(*conditions))
+
+        if db.session.scalar(stmt):
+            raise ValidationError("Email is already registered.")
 
     @post_load
     def create_user(self, data, **kwargs):
+        if self.user_id:
+            return data  # For updates, we just return the validated data
         user = User(
             username=data['username'],
             email=data['email']
@@ -137,6 +158,6 @@ class UserSchema(Schema):
 
 
 class UserDetailSchema(UserSchema):
-    categories = fields.Nested(lambda: CategorySchema(exclude=('user',)), many=True, dump_only=True)
-    transactions = fields.Nested(lambda: TransactionSchema(exclude=('user',)), many=True, dump_only=True)
-    budgets = fields.Nested(lambda: BudgetSchema(exclude=('user',)), many=True, dump_only=True)
+    categories = fields.Nested('CategorySchema', exclude=('user',), many=True, dump_only=True)
+    transactions = fields.Nested('TransactionSchema', exclude=('user',), many=True, dump_only=True)
+    budgets = fields.Nested('BudgetSchema', exclude=('user',), many=True, dump_only=True)

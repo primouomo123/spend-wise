@@ -1,16 +1,13 @@
 from decimal import Decimal, InvalidOperation
 from datetime import date
 
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, select, exists
 from sqlalchemy.orm import validates as model_validates
 from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, pre_load, post_load
 
 from config import db
 
 from utils import TRANSACTION_TYPES
-
-from .user import UserSchema
-from .category import CategorySchema
 
 class Transaction(db.Model):
     """Transaction model for recording income and expenses."""
@@ -94,6 +91,11 @@ class TransactionSchema(Schema):
         unknown = RAISE
         ordered = True
     
+    def __init__(self, *args, user_id=None, transaction_id=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.user_id = user_id
+        self.transaction_id = transaction_id
+    
     @pre_load
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
@@ -135,11 +137,32 @@ class TransactionSchema(Schema):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 255):
             raise ValidationError("Description must be between 1 and 255 characters long.")
     
+    @schema_validates('category_id')
+    def validate_category_id(self, value, **kwargs):
+        from .category import Category  # Avoid circular import
+        if not isinstance(value, int) or value <= 0:
+            raise ValidationError("category_id must be a positive integer.")
+        
+        if not self.user_id:
+            raise ValidationError("Authenticated user is required to validate category_id.")
+        
+        conditions = [Category.id == value, Category.user_id == self.user_id]
+
+        stmt = select(exists().where(*conditions))
+
+        if not db.session.scalar(stmt):
+            raise ValidationError("Category not found or does not belong to the authenticated user.")
+    
     @post_load
     def make_transaction(self, data, **kwargs):
+        if not self.user_id:
+            raise ValidationError("Authenticated user is required to create a Transaction.")
+        data["user_id"] = self.user_id
+        if self.transaction_id:
+            return data  # For updates, we just return the validated data
         return Transaction(**data)
 
 
 class TransactionDetailSchema(TransactionSchema):
-    user = fields.Nested(lambda: UserSchema(exclude=("transactions",)), dump_only=True)
-    category = fields.Nested(lambda: CategorySchema(exclude=("transactions",)), dump_only=True)
+    user = fields.Nested('UserSchema', exclude=("transactions",), dump_only=True)
+    category = fields.Nested('CategorySchema', exclude=("transactions",), dump_only=True)
