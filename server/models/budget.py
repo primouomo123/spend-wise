@@ -86,6 +86,20 @@ class BudgetSchema(Schema):
         if value < YEAR_FROM or value > YEAR_TO:
             raise ValidationError(f"Year must be between {YEAR_FROM} and {YEAR_TO}.")
     
+    @schema_validates('category_id')
+    def validate_category_id(self, value, **kwargs):
+        from .category import Category  # Avoid circular import
+        if not isinstance(value, int) or value <= 0:
+            raise ValidationError("category_id must be a positive integer.")
+        
+        if not self.user:
+            raise ValidationError("Authenticated user is required to validate category_id.")
+        
+        stmt = select(Category.id).where(Category.id == value, Category.user_id == self.user.id)
+        
+        if not db.session.scalar(stmt):
+            raise ValidationError(f"Category with id {value} does not exist for the authenticated user.")
+    
     @validates_schema
     def validate_unique_budget(self, data, **kwargs):
         if not self.user:
