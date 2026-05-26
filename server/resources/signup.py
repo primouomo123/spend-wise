@@ -1,0 +1,38 @@
+from flask import request, jsonify, make_response
+from flask_restful import Resource
+from sqlalchemy.exc import IntegrityError
+from flask_jwt_extended import create_access_token, get_jwt_identity, verify_jwt_in_request
+
+from config import app, db, api, jwt
+from models import User, UserSchema, UserDetailSchema
+from marshmallow import ValidationError
+
+class Signup(Resource):
+    """Resource for user signup"""
+
+    def post(self):
+        request_json = request.get_json()
+
+        try:
+            user = UserSchema().load({
+                'username': request_json.get('username'),
+                'password': request_json.get('password'),
+                'email': request_json.get('email')
+            })
+
+            db.session.add(user)
+            db.session.commit()
+
+            access_token = create_access_token(identity=str(user.id))
+
+            return make_response(jsonify({
+                'token': access_token,
+                'user': UserSchema().dump(user)
+            }), 201)
+
+        except ValidationError as e:
+            return {'errors': e.messages}, 400
+
+        except IntegrityError:
+            db.session.rollback()
+            return {'message': 'Username or email already exists.'}, 400
