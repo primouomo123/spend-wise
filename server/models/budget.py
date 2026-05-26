@@ -140,5 +140,5 @@ class BudgetSchema(Schema):
 
 
 class BudgetDetailSchema(BudgetSchema):
-    user = fields.Nested('UserSchema', exclude=("budgets",), dump_only=True)
-    category = fields.Nested('CategorySchema', exclude=("budgets",), dump_only=True)
+    user = fields.Nested('UserSchema', dump_only=True)
+    category = fields.Nested('CategorySchema', dump_only=True)

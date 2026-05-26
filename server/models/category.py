@@ -80,6 +80,6 @@ class CategorySchema(Schema):
 
 
 class CategoryDetailSchema(CategorySchema):
-    user = fields.Nested('UserSchema', exclude=("categories",), dump_only=True)
-    transactions = fields.Nested('TransactionSchema', exclude=("category",), many=True, dump_only=True)
-    budgets = fields.Nested('BudgetSchema', exclude=("category",), many=True, dump_only=True)
+    user = fields.Nested('UserSchema', dump_only=True)
+    transactions = fields.Nested('TransactionSchema', many=True, dump_only=True)
+    budgets = fields.Nested('BudgetSchema', many=True, dump_only=True)

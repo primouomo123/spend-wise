@@ -164,5 +164,5 @@ class TransactionSchema(Schema):
 
 
 class TransactionDetailSchema(TransactionSchema):
-    user = fields.Nested('UserSchema', exclude=("transactions",), dump_only=True)
-    category = fields.Nested('CategorySchema', exclude=("transactions",), dump_only=True)
+    user = fields.Nested('UserSchema', dump_only=True)
+    category = fields.Nested('CategorySchema', dump_only=True)

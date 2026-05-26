@@ -158,6 +158,6 @@ class UserSchema(Schema):
 
 
 class UserDetailSchema(UserSchema):
-    categories = fields.Nested('CategorySchema', exclude=('user',), many=True, dump_only=True)
-    transactions = fields.Nested('TransactionSchema', exclude=('user',), many=True, dump_only=True)
-    budgets = fields.Nested('BudgetSchema', exclude=('user',), many=True, dump_only=True)
+    categories = fields.Nested('CategorySchema', many=True, dump_only=True)
+    transactions = fields.Nested('TransactionSchema', many=True, dump_only=True)
+    budgets = fields.Nested('BudgetSchema', many=True, dump_only=True)
