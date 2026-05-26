@@ -15,6 +15,9 @@ class Login(Resource):
 
         if not username or not password:
             return make_response(jsonify({'error': 'Username and password are required'}), 400)
+        
+        username = username.strip().lower()
+        
         try:
             user = User.query.filter_by(username=username).first()
             if user and user.authenticate(password):
