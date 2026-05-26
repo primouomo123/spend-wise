@@ -8,6 +8,8 @@ server/migrations/__pycache__/
 
 server/models/__pycache__/
 
+server/resources/__pycache__/
+
 server/utils/__pycache__/
 
 .vscode/
