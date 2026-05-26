@@ -16,6 +16,7 @@ def check_if_logged_in():
             return make_response(jsonify({'error': '401 Unauthorized'}), 401)
 
 api.add_resource(Signup, '/signup', endpoint='signup')
+api.add_resource(Login, '/login', endpoint='login')
 
 
 if __name__ == '__main__':
