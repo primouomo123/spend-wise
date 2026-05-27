@@ -19,7 +19,7 @@ api.add_resource(Signup, '/signup', endpoint='signup')
 api.add_resource(Login, '/login', endpoint='login')
 api.add_resource(WhoAmI, '/whoami', endpoint='whoami')
 api.add_resource(TokenRefresh, '/refresh', endpoint='refresh')
-
+api.add_resource(CategoryList, '/categories', endpoint='categories')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)

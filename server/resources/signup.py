@@ -14,11 +14,7 @@ class Signup(Resource):
         request_json = request.get_json()
 
         try:
-            user = UserSchema().load({
-                'username': request_json.get('username'),
-                'password': request_json.get('password'),
-                'email': request_json.get('email')
-            })
+            user = UserSchema().load(request_json)
 
             db.session.add(user)
             db.session.commit()
@@ -33,8 +29,8 @@ class Signup(Resource):
             }), 201)
 
         except ValidationError as e:
-            return {'errors': e.messages}, 400
+            return make_response(jsonify({'errors': e.messages}), 400)
 
         except IntegrityError:
             db.session.rollback()
-            return {'message': 'Username or email already exists.'}, 400
+            return make_response(jsonify({'error': 'Username or email already exists'}), 400)

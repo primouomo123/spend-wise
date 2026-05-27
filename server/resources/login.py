@@ -7,8 +7,9 @@ from models import User, UserSchema
 class Login(Resource):
     """Resource for user login and JWT token generation."""
     def post(self):
-        username = request.json.get('username')
-        password = request.json.get('password')
+        request_json = request.get_json()
+        username = request_json.get('username')
+        password = request_json.get('password')
 
         if not username or not password:
             return make_response(jsonify({'error': 'Username and password are required'}), 400)

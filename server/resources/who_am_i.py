@@ -1,11 +1,12 @@
 from flask import jsonify, make_response
 from flask_restful import Resource
-from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from models import User, UserSchema
 
 class WhoAmI(Resource):
     """Resource to get the current logged-in user's information."""
+    @jwt_required()
     def get(self):
         try:
             user_id = get_jwt_identity()
