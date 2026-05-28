@@ -28,11 +28,12 @@ class Signup(Resource):
             if user:
                 category1 = Category(name='Income', user_id=user.id)
                 category2 = Category(name='Food', user_id=user.id)
-                category3 = Category(name='Others', user_id=user.id)
-                db.session.add_all([category1, category2, category3])
+                category3 = Category(name='Rent', user_id=user.id)
+                category4 = Category(name='Others', user_id=user.id)
+                db.session.add_all([category1, category2, category3, category4])
                 db.session.commit()
 
-                if not category1 or not category2 or not category3:
+                if not category1 or not category2 or not category3 or not category4:
                     return make_response(jsonify({'error': 'Failed to create default categories'}), 500)
 
             return make_response(jsonify({
