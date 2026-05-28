@@ -36,7 +36,8 @@ class CategoryList(Resource):
                 return make_response(jsonify({"error": "Category name must be unique per user"}), 400)
         
         try:
-            schema = CreateCategorySchema(context={'user_id': user_id})
+            schema = CreateCategorySchema()
+            schema.context = {'user_id': user_id}
             new_category = schema.load(request_json)
             db.session.add(new_category)
             db.session.commit()
@@ -49,4 +50,4 @@ class CategoryList(Resource):
             return make_response(jsonify({"error": "Category name must be unique per user"}), 400)
         except Exception as e:
             db.session.rollback()
-            return make_response(jsonify({"error": "Internal server error"}), 500)
+            return make_response(jsonify({"error": "Internal server error", "details": str(e)}), 500)
