@@ -13,6 +13,9 @@ class Signup(Resource):
     def post(self):
         request_json = request.get_json()
 
+        if not request_json:
+            return make_response(jsonify({'error': 'No input data provided'}), 400)
+
         try:
             user = CreateUserSchema().load(request_json)
 
@@ -29,8 +32,13 @@ class Signup(Resource):
             }), 201)
 
         except ValidationError as e:
+            db.session.rollback()
             return make_response(jsonify({'errors': e.messages}), 400)
 
         except IntegrityError:
             db.session.rollback()
             return make_response(jsonify({'error': 'Username or email already exists'}), 400)
+        
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({'error': 'Internal server error'}), 500)

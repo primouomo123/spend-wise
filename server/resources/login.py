@@ -8,12 +8,16 @@ class Login(Resource):
     """Resource for user login and JWT token generation."""
     def post(self):
         request_json = request.get_json()
+
+        if not request_json:
+            return make_response(jsonify({'error': 'No input data provided'}), 400)
+        
         username = request_json.get('username')
         password = request_json.get('password')
 
         if not username or not password:
             return make_response(jsonify({'error': 'Username and password are required'}), 400)
-        
+
         username = username.strip().lower()
         
         try:
