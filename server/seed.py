@@ -13,12 +13,24 @@ with app.app_context():
     db.session.query(User).delete()
     db.session.commit()
 
-    print("Seeding users and default categories...")
+    print("Seeding users...")
     user1 = User(username='john_doe', email='john_doe@gmail.com')
     user1.password_hash = 'Password123**'
     user2 = User(username='jane_smith', email='jane_smith@yahoo.com')
     user2.password_hash = 'SecurePass456##'
     db.session.add_all([user1, user2])
+    db.session.commit()
+
+    print("Seeding categories...")
+    category1 = Category(name='Income', user_id=user1.id)
+    category2 = Category(name='Food', user_id=user1.id)
+    category3 = Category(name='Rent', user_id=user1.id)
+    category4 = Category(name='Others', user_id=user1.id)
+    category5 = Category(name='Income', user_id=user2.id)
+    category6 = Category(name='Food', user_id=user2.id)
+    category7 = Category(name='Rent', user_id=user2.id)
+    category8 = Category(name='Others', user_id=user2.id)
+    db.session.add_all([category1, category2, category3, category4, category5, category6, category7, category8])
     db.session.commit()
 
     print("Seeding transactions...")
