@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import create_access_token, create_refresh_token
 
 from config import db
-from models import User, UserSchema
+from models import User, CreateUserSchema
 from marshmallow import ValidationError
 
 class Signup(Resource):
@@ -14,7 +14,7 @@ class Signup(Resource):
         request_json = request.get_json()
 
         try:
-            user = UserSchema().load(request_json)
+            user = CreateUserSchema().load(request_json)
 
             db.session.add(user)
             db.session.commit()
@@ -25,7 +25,7 @@ class Signup(Resource):
             return make_response(jsonify({
                 'access_token': access_token,
                 'refresh_token': refresh_token,
-                'user': UserSchema().dump(user)
+                'user': CreateUserSchema().dump(user)
             }), 201)
 
         except ValidationError as e:
