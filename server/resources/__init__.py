@@ -6,3 +6,4 @@ from .category_list import CategoryList
 from .category_detail import CategoryDetail
 from .currency_list import CurrencyList
 from .transaction_list import TransactionList
+from .transaction_detail import TransactionDetail
