@@ -25,6 +25,9 @@ class CategoryDetail(Resource):
         if not category:
             return make_response(jsonify({"error": "Category not found"}), 404)
         
+        if category.name == "income":
+            return make_response(jsonify({"error": "Cannot modify the default 'income' category"}), 400)
+        
         request_json = request.get_json()
 
         if not request_json:
@@ -46,7 +49,7 @@ class CategoryDetail(Resource):
             return make_response(jsonify({"error": "Category name must be unique per user"}), 400)
         except Exception as e:
             db.session.rollback()
-            return make_response(jsonify({"error": "Internal server error"}), 500)
+            return make_response(jsonify({"error": "Internal server error", "details": str(e)}), 500)
     
     @jwt_required()
     def delete(self, id):
@@ -55,6 +58,14 @@ class CategoryDetail(Resource):
         if not category:
             return make_response(jsonify({"error": "Category not found"}), 404)
         
+        if category.name == "income":
+            return make_response(jsonify({"error": "Cannot delete the default 'income' category"}), 400)
+        
         db.session.delete(category)
-        db.session.commit()
-        return make_response(jsonify({}), 204)
+        
+        try:
+            db.session.commit()
+            return make_response(jsonify({}), 204)
+        except Exception as e:
+            db.session.rollback()
+            return make_response(jsonify({"error": "Internal server error", "details": str(e)}), 500)
