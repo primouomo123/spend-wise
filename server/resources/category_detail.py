@@ -33,7 +33,10 @@ class CategoryDetail(Resource):
         if not request_json:
             return make_response(jsonify({"error": "No input data provided"}), 400)
         
-        patch_data = UpdateCategorySchema().load(request_json, partial=True)
+        try:
+            patch_data = UpdateCategorySchema().load(request_json, partial=True)
+        except ValidationError as err:
+            return make_response(jsonify({"error": "Validation error", "details": err.messages}), 400)
 
         for key, value in patch_data.items():
             setattr(category, key, value)
@@ -41,9 +44,6 @@ class CategoryDetail(Resource):
         try:
             db.session.commit()
             return make_response(jsonify(CategorySchema().dump(category)), 200)
-        except ValidationError as e:
-            db.session.rollback()
-            return make_response(jsonify({"error": "Internal server error"}), 400)
         except IntegrityError:
             db.session.rollback()
             return make_response(jsonify({"error": "Category name must be unique per user"}), 400)
