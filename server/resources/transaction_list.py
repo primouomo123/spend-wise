@@ -1,6 +1,8 @@
 from flask import request, jsonify, make_response
+from datetime import datetime
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import extract
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from marshmallow import ValidationError
 
@@ -19,11 +21,20 @@ class TransactionList(Resource):
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
 
+        # Get month and year from query params, default to current month/year
+        now = datetime.now()
+        month = request.args.get('month', now.month, type=int)
+        year = request.args.get('year', now.year, type=int)
+
         user_id = get_jwt_identity()
 
+        query = Transaction.query.filter_by(user_id=user_id)
+        query = query.filter(
+            extract('month', Transaction.date) == month,
+            extract('year', Transaction.date) == year
+        )
         pagination = (
-            Transaction.query
-            .filter_by(user_id=user_id)
+            query
             .order_by(Transaction.date.desc())
             .paginate(page=page, per_page=per_page, error_out=False)
         )
