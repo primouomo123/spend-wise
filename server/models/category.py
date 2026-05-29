@@ -21,7 +21,7 @@ class Category(db.Model):
     def validate_name(self, key, value):
         if not isinstance(value, str) or (len(value) < 1 or len(value) > 100):
             raise ValueError(f"{key} must be between 1 and 100 characters long.")
-        return value.strip()
+        return value.strip().lower()
     
     user = db.relationship('User', back_populates='categories', lazy='selectin')
     transactions = db.relationship('Transaction', back_populates='category', cascade='all, delete-orphan', lazy='selectin')
@@ -43,7 +43,7 @@ class CategorySchema(Schema):
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
         if "name" in data and isinstance(data["name"], str):
-            data["name"] = data["name"].strip()
+            data["name"] = data["name"].strip().lower()
         return data
     
     @schema_validates('name')

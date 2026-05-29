@@ -91,11 +91,6 @@ class TransactionSchema(Schema):
         unknown = RAISE
         ordered = True
     
-    def __init__(self, *args, user_id=None, transaction_id=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user_id = user_id
-        self.transaction_id = transaction_id
-    
     @pre_load
     def preprocess_input(self, data, **kwargs):
         data = dict(data)  # Safer copy of input data
@@ -139,28 +134,23 @@ class TransactionSchema(Schema):
     
     @schema_validates('category_id')
     def validate_category_id(self, value, **kwargs):
-        from .category import Category  # Avoid circular import
         if not isinstance(value, int) or value <= 0:
             raise ValidationError("category_id must be a positive integer.")
-        
-        if not self.user_id:
-            raise ValidationError("Authenticated user is required to validate category_id.")
-        
-        conditions = [Category.id == value, Category.user_id == self.user_id]
 
-        stmt = select(exists().where(*conditions))
 
-        if not db.session.scalar(stmt):
-            raise ValidationError("Category not found or does not belong to the authenticated user.")
-    
+class CreateTransactionSchema(TransactionSchema):
     @post_load
     def make_transaction(self, data, **kwargs):
-        if not self.user_id:
+        user_id = self.context.get('user_id')
+        if not user_id:
             raise ValidationError("Authenticated user is required to create a Transaction.")
-        data["user_id"] = self.user_id
-        if self.transaction_id:
-            return data  # For updates, we just return the validated data
+        data["user_id"] = user_id
         return Transaction(**data)
+
+class UpdateTransactionSchema(TransactionSchema):
+    @post_load
+    def update_transaction(self, data, **kwargs):
+        return data
 
 
 class TransactionDetailSchema(TransactionSchema):
