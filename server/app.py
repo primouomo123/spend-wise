@@ -20,7 +20,7 @@ api.add_resource(Login, '/login', endpoint='login')
 api.add_resource(WhoAmI, '/whoami', endpoint='whoami')
 api.add_resource(TokenRefresh, '/refresh', endpoint='refresh')
 api.add_resource(CategoryList, '/categories', endpoint='categories')
-api.add_resource(CategoryDetail, '/categories/<int:category_id>', endpoint='category_detail')
+api.add_resource(CategoryDetail, '/categories/<int:id>', endpoint='category_detail')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
