@@ -1,8 +1,8 @@
 from decimal import Decimal, InvalidOperation
 
-from sqlalchemy import CheckConstraint, UniqueConstraint, select, exists
+from sqlalchemy import CheckConstraint, UniqueConstraint
 from sqlalchemy.orm import validates as model_validates
-from marshmallow import Schema, fields, validate, validates as schema_validates, validates_schema, ValidationError, RAISE, post_load
+from marshmallow import Schema, fields, validate, validates as schema_validates, ValidationError, RAISE, post_load
 
 from config import db
 
@@ -66,11 +66,6 @@ class BudgetSchema(Schema):
         unknown = RAISE
         ordered = True
     
-    def __init__(self, *args, user_id=None, budget=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.user_id = user_id
-        self.budget = budget
-    
     @schema_validates('amount')
     def validate_amount(self, value, **kwargs):
         if value <= Decimal('0'):
@@ -88,55 +83,22 @@ class BudgetSchema(Schema):
     
     @schema_validates('category_id')
     def validate_category_id(self, value, **kwargs):
-        from .category import Category  # Avoid circular import
         if not isinstance(value, int) or value <= 0:
             raise ValidationError("category_id must be a positive integer.")
-        
-        if not self.user_id:
-            raise ValidationError("Authenticated user is required to validate category_id.")
-        
-        conditions = [Category.id == value, Category.user_id == self.user_id]
 
-        stmt = select(exists().where(*conditions))
-
-        if not db.session.scalar(stmt):
-            raise ValidationError("Category not found or does not belong to the authenticated user.")
-    
-    @validates_schema
-    def validate_unique_budget(self, data, **kwargs):
-        if not self.user_id:
-            raise ValidationError("Authenticated user is required to validate unique budget constraint.")
-        
-        category_id = data.get('category_id', self.budget.category_id if self.budget else None)
-        month = data.get('month', self.budget.month if self.budget else None)
-        year = data.get('year', self.budget.year if self.budget else None)
-        
-        if None in (category_id, month, year):
-            return
-        
-        conditions = [
-            Budget.user_id == self.user_id,
-            Budget.category_id == category_id,
-            Budget.month == month,
-            Budget.year == year
-        ]
-
-        if self.budget:
-            conditions.append(Budget.id != self.budget.id)
-        
-        stmt = select(exists().where(*conditions))
-
-        if db.session.scalar(stmt):
-            raise ValidationError("You already have a budget for this category and month/year. Please update the existing budget instead.")
-    
+class CreateBudgetSchema(BudgetSchema):
     @post_load
     def make_budget(self, data, **kwargs):
-        if not self.user_id:
+        user_id = self.context.get("user_id")
+        if not user_id:
             raise ValidationError("Authenticated user is required to create a Budget.")
-        data["user_id"] = self.user_id
-        if self.budget:
-            return data  # For updates, we just return the validated data
+        data["user_id"] = user_id
         return Budget(**data)
+
+class UpdateBudgetSchema(BudgetSchema):
+    @post_load
+    def update_budget(self, data, **kwargs):
+        return data  # Return the validated data for partial updates
 
 
 class BudgetDetailSchema(BudgetSchema):
