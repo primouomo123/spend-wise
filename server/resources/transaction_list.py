@@ -28,11 +28,9 @@ class TransactionList(Resource):
 
         user_id = get_jwt_identity()
 
-        query = Transaction.query.filter_by(user_id=user_id)
-        query = query.filter(
-            extract('month', Transaction.date) == month,
-            extract('year', Transaction.date) == year
-        )
+        query = Transaction.query.filter(Transaction.user_id == user_id,
+                                         extract('month', Transaction.date) == month,
+                                         extract('year', Transaction.date) == year)
         pagination = (
             query
             .order_by(Transaction.date.desc())
