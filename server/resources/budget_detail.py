@@ -65,8 +65,8 @@ class BudgetDetail(Resource):
             if not category:
                 return make_response(jsonify({"error": "Category not found"}), 404)
             
-            request_json["category_id"] = category.id
-            request_json.pop("category_name", None)
+        request_json["category_id"] = category.id
+        request_json.pop("category_name", None)
 
         try:
             patch_data = UpdateBudgetSchema().load(request_json, partial=True)
