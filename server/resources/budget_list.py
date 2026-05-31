@@ -26,9 +26,17 @@ class BudgetList(Resource):
 
         user_id = get_jwt_identity()
 
-        query = Budget.query.filter(Budget.user_id == user_id,
-                                    Budget.month == month,
-                                    Budget.year == year)
+        query = (
+            db.session.query(Budget.id.label('id'),
+                     Category.name.label('category_name'),
+                     Budget.amount.label('amount'),
+                     Budget.month.label('month'),
+                     Budget.year.label('year'))
+            .join(Category, Budget.category_id == Category.id)
+            .filter(Budget.user_id == user_id,
+                    Budget.month == month,
+                    Budget.year == year)
+        )
         pagination = (
             query
             .paginate(page=page, per_page=per_page, error_out=False)
@@ -39,7 +47,13 @@ class BudgetList(Resource):
             "per_page": pagination.per_page,
             "total": pagination.total,
             "total_pages": pagination.pages,
-            "budgets": BudgetSchema(many=True).dump(pagination.items)
+            "budgets": [{
+                "id": item.id,
+                "category_name": item.category_name,
+                "amount": str(item.amount),
+                "month": item.month,
+                "year": item.year
+            } for item in pagination.items]
         }), 200)
     
 
@@ -54,7 +68,7 @@ class BudgetList(Resource):
         # -------------------------
         # REQUIRED RAW INPUTS
         # -------------------------
-        category_id = request_json.get("category_id")
+        category_name = request_json.get("category_name")
         amount = request_json.get("amount")
         month = request_json.get("month")
         year = request_json.get("year")
@@ -62,8 +76,8 @@ class BudgetList(Resource):
         # -------------------------
         # VALIDATION
         # -------------------------
-        if not category_id:
-            return make_response(jsonify({"error": "category_id is required"}), 400)
+        if not category_name:
+            return make_response(jsonify({"error": "category_name is required"}), 400)
         
         if not amount or amount is None:
             return make_response(jsonify({"error": "amount is required"}), 400)
@@ -81,9 +95,13 @@ class BudgetList(Resource):
             return make_response(jsonify({"error": "year is required"}), 400)
         
         # Validate category belongs to user
-        category = Category.query.filter_by(id=category_id, user_id=user_id).first()
+        category = Category.query.filter_by(name=category_name, user_id=user_id).first()
         if not category:
             return make_response(jsonify({"error": "Category not found"}), 404)
+        
+        request_json["category_id"] = category.id
+        request_json.pop("category_name", None)
+        category_id = category.id
         
         budget = Budget.query.filter_by(user_id=user_id,
                                         category_id=category_id,
@@ -101,7 +119,24 @@ class BudgetList(Resource):
             db.session.add(new_budget)
             db.session.commit()
 
-            return make_response(jsonify(BudgetSchema().dump(new_budget)), 201)
+            return_budget = (
+                db.session.query(Budget.id.label('id'),
+                                 Category.name.label('category_name'),
+                                 Budget.amount.label('amount'),
+                                 Budget.month.label('month'),
+                                 Budget.year.label('year'))
+                .join(Category, Budget.category_id == Category.id)
+                .filter(Budget.id == new_budget.id)
+                .first()
+            )
+
+            return make_response(jsonify({
+                "id": return_budget.id,
+                "category_name": return_budget.category_name,
+                "amount": str(return_budget.amount),
+                "month": return_budget.month,
+                "year": return_budget.year
+            }), 201)
         
         except ValidationError as err:
             db.session.rollback()

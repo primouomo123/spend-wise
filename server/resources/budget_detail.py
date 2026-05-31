@@ -22,7 +22,24 @@ class BudgetDetail(Resource):
         if not budget:
             return make_response(jsonify({"error": "Budget not found"}), 404)
         
-        return make_response(jsonify(BudgetSchema().dump(budget)), 200)
+        return_budget = (
+            db.session.query(Budget.id.label('id'),
+                             Category.name.label('category_name'),
+                             Budget.amount.label('amount'),
+                             Budget.month.label('month'),
+                             Budget.year.label('year'))
+            .join(Category, Budget.category_id == Category.id)
+            .filter(Budget.id == budget.id)
+            .first()
+        )
+        
+        return make_response(jsonify({
+            "id": return_budget.id,
+            "category_name": return_budget.category_name,
+            "amount": str(return_budget.amount),
+            "month": return_budget.month,
+            "year": return_budget.year
+        }), 200)
         
     
     @jwt_required()
@@ -37,11 +54,14 @@ class BudgetDetail(Resource):
         if not request_json:
             return make_response(jsonify({"error": "No input data provided"}), 400)
         
-        category_id = request_json.get("category_id")
-        if category_id:
-            category = Category.query.filter_by(id=category_id, user_id=user_id).first()
+        category_name = request_json.get("category_name")
+        if category_name:
+            category = Category.query.filter_by(name=category_name, user_id=user_id).first()
             if not category:
                 return make_response(jsonify({"error": "Category not found"}), 404)
+            
+            request_json["category_id"] = category.id
+            request_json.pop("category_name", None)
 
         try:
             patch_data = UpdateBudgetSchema().load(request_json, partial=True)
@@ -56,7 +76,23 @@ class BudgetDetail(Resource):
         
         try:
             db.session.commit()
-            return make_response(jsonify(BudgetSchema().dump(budget)), 200)
+            return_budget = (
+                db.session.query(Budget.id.label('id'),
+                                 Category.name.label('category_name'),
+                                 Budget.amount.label('amount'),
+                                 Budget.month.label('month'),
+                                 Budget.year.label('year'))
+                .join(Category, Budget.category_id == Category.id)
+                .filter(Budget.id == budget.id)
+                .first()
+            )
+            return make_response(jsonify({
+                "id": return_budget.id,
+                "category_name": return_budget.category_name,
+                "amount": str(return_budget.amount),
+                "month": return_budget.month,
+                "year": return_budget.year
+            }), 200)
         except IntegrityError:
             db.session.rollback()
             return make_response(jsonify({"error": "Budget name must be unique per user"}), 400)
