@@ -14,7 +14,9 @@ class CategoryDetail(Resource):
         user_id = get_jwt_identity()
         category = Category.query.filter_by(id=id, user_id=user_id).first()
         if category:
-            return make_response(jsonify(CategorySchema().dump(category)), 200)
+            return_category = (db.session.query(Category.id.label('id'), Category.name.label('name'))
+                                                .filter_by(id=category.id)).first()
+            return make_response(jsonify(CategorySchema().dump(return_category)), 200)
         else:
             return make_response(jsonify({"error": "Category not found"}), 404)
     
@@ -43,7 +45,9 @@ class CategoryDetail(Resource):
         
         try:
             db.session.commit()
-            return make_response(jsonify(CategorySchema().dump(category)), 200)
+            return_category = (db.session.query(Category.id.label('id'), Category.name.label('name'))
+                                                .filter_by(id=category.id)).first()
+            return make_response(jsonify(CategorySchema().dump(return_category)), 200)
         except IntegrityError:
             db.session.rollback()
             return make_response(jsonify({"error": "Category name must be unique per user"}), 400)
