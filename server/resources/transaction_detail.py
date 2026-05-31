@@ -22,8 +22,28 @@ class TransactionDetail(Resource):
 
         if not transaction:
             return make_response(jsonify({"error": "Transaction not found"}), 404)
+        
+        return_transaction = (db.session.query(Transaction.id.label('id'),
+                                               Transaction.amount.label('amount'),
+                                               Transaction.currency.label('currency'),
+                                               Transaction.amount_usd.label('amount_usd'),
+                                               Transaction.transaction_type.label('transaction_type'),
+                                               Transaction.date.label('date'),
+                                               Transaction.description.label('description'),
+                                               Category.name.label('category_name'))
+                                               .join(Category, Category.id == Transaction.category_id)
+                                               .filter(Transaction.id == transaction.id)).first()
 
-        return make_response(jsonify(TransactionSchema().dump(transaction)), 200)
+        return make_response(jsonify({
+            "id": return_transaction.id,
+            "amount": str(return_transaction.amount),
+            "currency": return_transaction.currency,
+            "amount_usd": str(return_transaction.amount_usd),
+            "transaction_type": return_transaction.transaction_type,
+            "date": return_transaction.date.isoformat(),
+            "description": return_transaction.description,
+            "category_name": return_transaction.category_name
+        }), 200)
 
     @jwt_required()
     def patch(self, id):
@@ -36,15 +56,7 @@ class TransactionDetail(Resource):
         request_json = request.get_json()
         if not request_json:
             return make_response(jsonify({"error": "No input data provided"}), 400)
-
-        try:
-            patch_data = UpdateTransactionSchema().load(request_json, partial=True)
-        except ValidationError as err:
-            return make_response(
-                jsonify({"error": "Validation error", "details": err.messages}),
-                400
-            )
-
+        
         # -------------------------
         # BASE VALUES (DB STATE)
         # -------------------------
@@ -56,8 +68,8 @@ class TransactionDetail(Resource):
         # -------------------------
         # TRANSACTION TYPE UPDATE
         # -------------------------
-        if "transaction_type" in patch_data:
-            transaction_type = patch_data["transaction_type"].strip().lower()
+        if "transaction_type" in request_json:
+            transaction_type = request_json["transaction_type"].strip().lower()
 
             if transaction_type not in TRANSACTION_TYPES:
                 return make_response(jsonify({"error": "Invalid transaction type"}), 400)
@@ -77,12 +89,10 @@ class TransactionDetail(Resource):
                     500
                 )
 
-            patch_data["category_id"] = category.id
-
         elif transaction_type == "expense":
-            if "category_id" in patch_data:
+            if "category_name" in request_json:
                 category = Category.query.filter_by(
-                    id=patch_data["category_id"],
+                    name=request_json["category_name"].strip().lower(),
                     user_id=user_id
                 ).first()
             else:
@@ -100,7 +110,16 @@ class TransactionDetail(Resource):
                     400
                 )
 
-            patch_data["category_id"] = category.id
+        request_json["category_id"] = category.id
+        request_json.pop("category_name", None)  # Remove category_name since we have category_id now
+
+        try:
+            patch_data = UpdateTransactionSchema().load(request_json, partial=True)
+        except ValidationError as err:
+            return make_response(
+                jsonify({"error": "Validation error", "details": err.messages}),
+                400
+            )
 
         # -------------------------
         # AMOUNT UPDATE
@@ -152,7 +171,26 @@ class TransactionDetail(Resource):
 
         try:
             db.session.commit()
-            return make_response(jsonify(TransactionSchema().dump(transaction)), 200)
+            return_transaction = (db.session.query(Transaction.id.label('id'),
+                                               Transaction.amount.label('amount'),
+                                               Transaction.currency.label('currency'),
+                                               Transaction.amount_usd.label('amount_usd'),
+                                               Transaction.transaction_type.label('transaction_type'),
+                                               Transaction.date.label('date'),
+                                               Transaction.description.label('description'),
+                                               Category.name.label('category_name'))
+                                               .join(Category, Category.id == Transaction.category_id)
+                                               .filter(Transaction.id == transaction.id)).first()
+            return make_response(jsonify({
+                "id": return_transaction.id,
+                "amount": str(return_transaction.amount),
+                "currency": return_transaction.currency,
+                "amount_usd": str(return_transaction.amount_usd),
+                "transaction_type": return_transaction.transaction_type,
+                "date": return_transaction.date.isoformat(),
+                "description": return_transaction.description,
+                "category_name": return_transaction.category_name
+            }), 200)
 
         except IntegrityError:
             db.session.rollback()
