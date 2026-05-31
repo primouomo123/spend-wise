@@ -26,6 +26,7 @@ api.add_resource(TransactionList, '/transactions', endpoint='transactions')
 api.add_resource(TransactionDetail, '/transactions/<int:id>', endpoint='transaction_detail')
 api.add_resource(BudgetList, '/budgets', endpoint='budgets')
 api.add_resource(BudgetDetail, '/budgets/<int:id>', endpoint='budget_detail')
+api.add_resource(Summary, '/summary', endpoint='summary')
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
