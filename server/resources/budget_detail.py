@@ -59,6 +59,11 @@ class BudgetDetail(Resource):
             category = Category.query.filter_by(name=category_name, user_id=user_id).first()
             if not category:
                 return make_response(jsonify({"error": "Category not found"}), 404)
+        
+        else:
+            category = Category.query.filter_by(id=budget.category_id, user_id=user_id).first()
+            if not category:
+                return make_response(jsonify({"error": "Category not found"}), 404)
             
             request_json["category_id"] = category.id
             request_json.pop("category_name", None)
