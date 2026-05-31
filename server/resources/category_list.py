@@ -14,7 +14,9 @@ class CategoryList(Resource):
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
         user_id = get_jwt_identity()
-        pagination = Category.query.filter_by(user_id=user_id).paginate(page=page, per_page=per_page, error_out=False)
+        pagination = (db.session.query(Category.id.label('id'), Category.name.label('name'))
+                      .filter_by(user_id=user_id)
+                      .paginate(page=page, per_page=per_page, error_out=False))
 
         return make_response(jsonify({
             'page': pagination.page,
@@ -41,7 +43,10 @@ class CategoryList(Resource):
             new_category = schema.load(request_json)
             db.session.add(new_category)
             db.session.commit()
-            return make_response(jsonify(CategorySchema().dump(new_category)), 201)
+            return_category = (db.session.query(Category.id.label('id'), Category.name.label('name'))
+                                                .filter_by(id=new_category.id)).first()
+                               
+            return make_response(jsonify(CategorySchema().dump(return_category)), 201)
         except ValidationError as e:
             db.session.rollback()
             return make_response(jsonify({'error': e.messages}), 400)
