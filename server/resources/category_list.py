@@ -23,7 +23,7 @@ class CategoryList(Resource):
             'per_page': pagination.per_page,
             'total': pagination.total,
             'total_pages': pagination.pages,
-            'categories': CategorySchema(many=True).dump(pagination.items)
+            'categories': [{'id': item.id, 'name': item.name} for item in pagination.items]
         }), 200)
     
     @jwt_required()
@@ -46,7 +46,7 @@ class CategoryList(Resource):
             return_category = (db.session.query(Category.id.label('id'), Category.name.label('name'))
                                                 .filter_by(id=new_category.id)).first()
                                
-            return make_response(jsonify(CategorySchema().dump(return_category)), 201)
+            return make_response(jsonify({'id': return_category.id, 'name': return_category.name}), 201)
         except ValidationError as e:
             db.session.rollback()
             return make_response(jsonify({'error': e.messages}), 400)

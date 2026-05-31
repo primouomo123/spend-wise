@@ -16,7 +16,7 @@ class CategoryDetail(Resource):
         if category:
             return_category = (db.session.query(Category.id.label('id'), Category.name.label('name'))
                                                 .filter_by(id=category.id)).first()
-            return make_response(jsonify(CategorySchema().dump(return_category)), 200)
+            return make_response(jsonify({'id': return_category.id, 'name': return_category.name}), 200)
         else:
             return make_response(jsonify({"error": "Category not found"}), 404)
     
@@ -47,7 +47,7 @@ class CategoryDetail(Resource):
             db.session.commit()
             return_category = (db.session.query(Category.id.label('id'), Category.name.label('name'))
                                                 .filter_by(id=category.id)).first()
-            return make_response(jsonify(CategorySchema().dump(return_category)), 200)
+            return make_response(jsonify({'id': return_category.id, 'name': return_category.name}), 200)
         except IntegrityError:
             db.session.rollback()
             return make_response(jsonify({"error": "Category name must be unique per user"}), 400)
