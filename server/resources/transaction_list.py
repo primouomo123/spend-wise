@@ -28,9 +28,18 @@ class TransactionList(Resource):
 
         user_id = get_jwt_identity()
 
-        query = Transaction.query.filter(Transaction.user_id == user_id,
-                                         extract('month', Transaction.date) == month,
-                                         extract('year', Transaction.date) == year)
+        query = (db.session.query(Transaction.id.label('id'),
+                                  Transaction.amount.label('amount'),
+                                  Transaction.currency.label('currency'),
+                                  Transaction.amount_usd.label('amount_usd'),
+                                  Transaction.transaction_type.label('transaction_type'),
+                                  Transaction.date.label('date'),
+                                  Transaction.description.label('description'),
+                                  Category.name.label('category_name'))
+                                  .join(Category, Category.id == Transaction.category_id)
+                                  .filter(Transaction.user_id == user_id,
+                                          extract('month', Transaction.date) == month,
+                                          extract('year', Transaction.date) == year))
         pagination = (
             query
             .order_by(Transaction.date.desc())
@@ -42,7 +51,16 @@ class TransactionList(Resource):
             "per_page": pagination.per_page,
             "total": pagination.total,
             "total_pages": pagination.pages,
-            "transactions": TransactionSchema(many=True).dump(pagination.items)
+            "transactions": [{
+                "id": item.id,
+                "amount": str(item.amount),
+                "currency": item.currency,
+                "amount_usd": str(item.amount_usd),
+                "transaction_type": item.transaction_type,
+                "date": item.date.isoformat(),
+                "description": item.description,
+                "category_name": item.category_name
+            } for item in pagination.items]
         }), 200)
 
     @jwt_required()
@@ -56,8 +74,8 @@ class TransactionList(Resource):
         # -------------------------
         # REQUIRED RAW INPUTS
         # -------------------------
-        category_id = request_json.get("category_id")
-        transaction_type = request_json.get("transaction_type")
+        category_name = request_json.get("category_name").strip().lower() if request_json.get("category_name") else None
+        transaction_type = request_json.get("transaction_type").strip().lower() if request_json.get("transaction_type") else None
         amount_raw = request_json.get("amount")
         currency_raw = request_json.get("currency")
 
@@ -72,20 +90,24 @@ class TransactionList(Resource):
                 name="income",
                 user_id=user_id
             ).first()
-
-            category_id = category.id if category else None
         
-        if not category_id or category_id is None:
-            return make_response(jsonify({"error": "Category ID is required"}), 400)
+            if not category:
+                return make_response(jsonify({"error": "Category not found"}), 404)
+        
         
         if transaction_type == "expense":
+            if category_name == "income":
+                return make_response(jsonify({"error": "Cannot assign income category to expense transaction"}), 400)
             category = Category.query.filter_by(
-                id=category_id,
+                name=category_name,
                 user_id=user_id
             ).first()
 
-            if category.name == "income":
-                return make_response(jsonify({"error": "Cannot assign income category to expense transaction"}), 400)
+            if not category:
+                return make_response(jsonify({"error": "Category not found"}), 404)
+            
+        category_id = category.id if category else None
+        request_json.pop("category_name", None)  # Remove category_name since we have category_id now
         
         request_json["category_id"] = category.id if category else None
 
@@ -147,14 +169,32 @@ class TransactionList(Resource):
             # -------------------------
             schema = CreateTransactionSchema()
             schema.context = {"user_id": user_id}
-
             new_transaction = schema.load(request_json)
-
             db.session.add(new_transaction)
             db.session.commit()
 
+            return_transaction = (db.session.query(Transaction.id.label('id'),
+                                                Transaction.amount.label('amount'),
+                                                Transaction.currency.label('currency'),
+                                                Transaction.amount_usd.label('amount_usd'),
+                                                Transaction.transaction_type.label('transaction_type'),
+                                                Transaction.date.label('date'),
+                                                Transaction.description.label('description'),
+                                                Category.name.label('category_name'))
+                                                .join(Category, Category.id == Transaction.category_id)
+                                                .filter(Transaction.id == new_transaction.id)).first()
+
             return make_response(
-                jsonify(TransactionSchema().dump(new_transaction)),
+                jsonify({
+                    "id": return_transaction.id,
+                    "amount": str(return_transaction.amount),
+                    "currency": return_transaction.currency,
+                    "amount_usd": str(return_transaction.amount_usd),
+                    "transaction_type": return_transaction.transaction_type,
+                    "date": return_transaction.date.isoformat(),
+                    "description": return_transaction.description,
+                    "category_name": return_transaction.category_name
+                }),
                 201
             )
 
