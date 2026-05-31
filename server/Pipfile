@@ -13,6 +13,7 @@ flask-bcrypt = "*"
 flask-jwt-extended = "*"
 python-dotenv = "*"
 email-validator = "*"
+requests = "*"
 
 [dev-packages]
 

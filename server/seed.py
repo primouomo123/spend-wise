@@ -22,158 +22,160 @@ with app.app_context():
     db.session.commit()
 
     print("Seeding categories...")
-    category1 = Category(name='Food', user_id=user1.id)
-    category2 = Category(name='Rent', user_id=user1.id)
-    category3 = Category(name='Others', user_id=user1.id)
-    category4 = Category(name='Food', user_id=user2.id)
-    category5 = Category(name='Rent', user_id=user2.id)
-    category6 = Category(name='Others', user_id=user2.id)
-    category7 = Category(name='Income', user_id=user1.id)
-    category8 = Category(name='Income', user_id=user2.id)
+    category1 = Category(name='Income', user_id=user1.id)
+    category2 = Category(name='Food', user_id=user1.id)
+    category3 = Category(name='Rent', user_id=user1.id)
+    category4 = Category(name='Others', user_id=user1.id)
+    category5 = Category(name='Income', user_id=user2.id)
+    category6 = Category(name='Food', user_id=user2.id)
+    category7 = Category(name='Rent', user_id=user2.id)
+    category8 = Category(name='Others', user_id=user2.id)
     db.session.add_all([category1, category2, category3, category4, category5, category6, category7, category8])
     db.session.commit()
 
     print("Seeding transactions...")
     transaction1 = Transaction(
-        amount=50.00,
-        currency='USD',
-        amount_usd=50.00,
-        transaction_type='expense',
-        date=datetime.date(2024, 1, 15),
-        description='Grocery shopping',
-        user_id=user1.id,
-        category_id=category1.id
-    )
-    transaction2 = Transaction(
-        amount=1200.00,
-        currency='USD',
-        amount_usd=1200.00,
-        transaction_type='expense',
-        date=datetime.date(2024, 1, 1),
-        description='Monthly rent',
-        user_id=user1.id,
-        category_id=category2.id
-    )
-    transaction3 = Transaction(
-        amount=200.00,
-        currency='USD',
-        amount_usd=200.00,
-        transaction_type='expense',
-        date=datetime.date(2024, 1, 20),
-        description='New headphones',
-        user_id=user1.id,
-        category_id=category3.id
-    )
-    transaction4 = Transaction(
-        amount=60.00,
-        currency='USD',
-        amount_usd=60.00,
-        transaction_type='expense',
-        date=datetime.date(2024, 1, 18),
-        description='Dinner with friends',
-        user_id=user2.id,
-        category_id=category4.id
-    )
-    transaction5 = Transaction(
-        amount=1300.00,
-        currency='USD',
-        amount_usd=1300.00,
-        transaction_type='expense',
-        date=datetime.date(2024, 1, 3),
-        description='Monthly rent',
-        user_id=user2.id,
-        category_id=category5.id
-    )
-    transaction6 = Transaction(
-        amount=150.00,
-        currency='USD',
-        amount_usd=150.00,
-        transaction_type='expense',
-        date=datetime.date(2024, 1, 22),
-        description='Concert tickets',
-        user_id=user2.id,
-        category_id=category6.id
-    )
-    transaction7 = Transaction(
         amount=3000.00,
         currency='USD',
         amount_usd=3000.00,
         transaction_type='income',
-        date=datetime.date(2024, 1, 5),
+        date=datetime.date(2026, 5, 5),
         description='Salary',
         user_id=user1.id,
-        category_id=category7.id
+        category_id=1
     )
-    transaction8 = Transaction(
+    transaction2 = Transaction(
+        amount=50.00,
+        currency='USD',
+        amount_usd=50.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 5, 15),
+        description='Grocery shopping',
+        user_id=user1.id,
+        category_id=2
+    )
+    transaction3 = Transaction(
+        amount=1200.00,
+        currency='USD',
+        amount_usd=1200.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 5, 1),
+        description='Monthly rent',
+        user_id=user1.id,
+        category_id=3
+    )
+    transaction4 = Transaction(
+        amount=200.00,
+        currency='USD',
+        amount_usd=200.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 5, 20),
+        description='New headphones',
+        user_id=user1.id,
+        category_id=4
+    )
+    transaction5 = Transaction(
         amount=3200.00,
         currency='USD',
         amount_usd=3200.00,
         transaction_type='income',
-        date=datetime.date(2024, 1, 5),
+        date=datetime.date(2026, 5, 5),
         description='Salary',
         user_id=user2.id,
-        category_id=category8.id
+        category_id=5
+    )
+    transaction6 = Transaction(
+        amount=60.00,
+        currency='USD',
+        amount_usd=60.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 5, 18),
+        description='Food for the month',
+        user_id=user2.id,
+        category_id=6
+    )
+    transaction7 = Transaction(
+        amount=1300.00,
+        currency='USD',
+        amount_usd=1300.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 5, 3),
+        description='Monthly rent',
+        user_id=user2.id,
+        category_id=7
+    )
+    transaction8 = Transaction(
+        amount=150.00,
+        currency='USD',
+        amount_usd=150.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 5, 22),
+        description='Concert tickets',
+        user_id=user2.id,
+        category_id=8
     )
     db.session.add_all([transaction1, transaction2, transaction3, transaction4, transaction5, transaction6, transaction7, transaction8])
     db.session.commit()
 
     print("Seeding budgets...")
     budget1 = Budget(
-        amount=500.00,
-        month=1,
-        year=2024,
+        amount=3000.00,
+        month=5,
+        year=2026,
         user_id=user1.id,
-        category_id=category1.id
+        category_id=1
     )
     budget2 = Budget(
-        amount=1200.00,
-        month=1,
-        year=2024,
+        amount=500.00,
+        month=5,
+        year=2026,
         user_id=user1.id,
-        category_id=category2.id
+        category_id=2
     )
     budget3 = Budget(
-        amount=300.00,
-        month=1,
-        year=2024,
+        amount=1200.00,
+        month=5,
+        year=2026,
         user_id=user1.id,
-        category_id=category3.id
+        category_id=3
     )
     budget4 = Budget(
-        amount=400.00,
-        month=1,
-        year=2024,
-        user_id=user2.id,
-        category_id=category4.id
+        amount=300.00,
+        month=5,
+        year=2026,
+        user_id=user1.id,
+        category_id=4
     )
     budget5 = Budget(
-        amount=1300.00,
-        month=1,
-        year=2024,
+        amount=3200.00,
+        month=5,
+        year=2026,
         user_id=user2.id,
-        category_id=category5.id
+        category_id=5
     )
     budget6 = Budget(
-        amount=200.00,
-        month=1,
-        year=2024,
+        amount=600.00,
+        month=5,
+        year=2026,
         user_id=user2.id,
-        category_id=category6.id
+        category_id=6
     )
     budget7 = Budget(
-        amount=3000.00,
-        month=1,
-        year=2024,
-        user_id=user1.id,
-        category_id=category7.id
+        amount=1300.00,
+        month=5,
+        year=2026,
+        user_id=user2.id,
+        category_id=7
     )
     budget8 = Budget(
-        amount=3200.00,
-        month=1,
-        year=2024,
+        amount=200.00,
+        month=5,
+        year=2026,
         user_id=user2.id,
-        category_id=category8.id
+        category_id=8
     )
+
+
     db.session.add_all([budget1, budget2, budget3, budget4, budget5, budget6, budget7, budget8])
     db.session.commit()
 
