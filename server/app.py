@@ -17,7 +17,7 @@ def check_if_logged_in():
 
 api.add_resource(Signup, '/api/signup', endpoint='signup')
 api.add_resource(Login, '/api/login', endpoint='login')
-api.add_resource(WhoAmI, '/api/whoami', endpoint='whoami')
+api.add_resource(WhoAmI, '/api/me', endpoint='me')
 api.add_resource(TokenRefresh, '/api/refresh', endpoint='refresh')
 api.add_resource(CategoryList, '/api/categories', endpoint='categories')
 api.add_resource(CategoryDetail, '/api/categories/<int:id>', endpoint='category_detail')
