@@ -1,7 +1,7 @@
 from flask import request, jsonify, make_response
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token
 
 from config import db
 from models import CreateUserSchema, Category
@@ -23,7 +23,6 @@ class Signup(Resource):
             db.session.commit()
 
             access_token = create_access_token(identity=str(user.id))
-            refresh_token = create_refresh_token(identity=str(user.id))
 
             if user:
                 category1 = Category(name='Income', user_id=user.id)
@@ -38,7 +37,6 @@ class Signup(Resource):
 
             return make_response(jsonify({
                 'access_token': access_token,
-                'refresh_token': refresh_token,
                 'user': CreateUserSchema().dump(user)
             }), 201)
 

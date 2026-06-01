@@ -13,3 +13,5 @@ server/resources/__pycache__/
 server/utils/__pycache__/
 
 .vscode/
+
+client/.env
