@@ -1,6 +1,6 @@
 import { useState, createContext, useContext, useEffect, useMemo } from 'react';
-import { useSignUp } from '../hooks/useSignUp';
-import { useLogin } from '../hooks/useLogin';
+import useSignUp from '../hooks/useSignUp';
+import useLogin from '../hooks/useLogin';
 
 const UserContext = createContext(null);
 
