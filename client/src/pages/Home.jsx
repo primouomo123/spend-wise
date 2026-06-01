@@ -1,16 +1,24 @@
 import { useState } from "react";
 import { ThemeProvider, CssBaseline, Container, Box } from "@mui/material";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 
 import { lightTheme, darkTheme } from "../style/theme";
 
 import Header from "../components/Header";
+import { useUserContext } from "../context/UserContext";
 
 export default function Home() {
+    const navigate = useNavigate();
+    const { logout } = useUserContext();
     const [isDarkMode, setIsDarkMode] = useState(false);
 
     const handleThemeToggle = () => {
         setIsDarkMode((prev) => !prev);
+    };
+
+    const handleLogout = () => {
+        logout();
+        navigate("/login", { replace: true });
     };
 
     return (
@@ -19,7 +27,8 @@ export default function Home() {
             <Container>
                 <Header
                 isDarkMode={isDarkMode}
-                onThemeToggle={handleThemeToggle} />
+                onThemeToggle={handleThemeToggle}
+                onLogout={handleLogout} />
                 <Outlet />
             </Container>
         </ThemeProvider>

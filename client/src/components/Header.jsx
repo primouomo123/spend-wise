@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 
-export default function Header({ isDarkMode, onThemeToggle }) {
+export default function Header({ isDarkMode, onThemeToggle, onLogout }) {
     return (
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "1rem 0" }}>
             <nav>
@@ -10,9 +10,14 @@ export default function Header({ isDarkMode, onThemeToggle }) {
                 <NavLink to="/budget" style={{ marginRight: "1rem" }}>Budget</NavLink>
                 <NavLink to="/me">Me</NavLink>
             </nav>
-            <button onClick={onThemeToggle} style={{ padding: "0.5rem 1rem", cursor: "pointer" }}>
-                {isDarkMode ? "Light Mode" : "Dark Mode"}
-            </button>
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button onClick={onThemeToggle} style={{ padding: "0.5rem 1rem", cursor: "pointer" }}>
+                    {isDarkMode ? "Light Mode" : "Dark Mode"}
+                </button>
+                <button onClick={onLogout} style={{ padding: "0.5rem 1rem", cursor: "pointer" }}>
+                    Logout
+                </button>
+            </div>
         </header>
     );
 }
