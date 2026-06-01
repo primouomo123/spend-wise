@@ -15,6 +15,7 @@ python-dotenv = "*"
 email-validator = "*"
 requests = "*"
 gunicorn = "*"
+flask-cors = "*"
 
 [dev-packages]
 
