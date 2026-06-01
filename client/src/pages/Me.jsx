@@ -1,3 +1,3 @@
 export default function Me() {
-    return null;
+    return <p>Me page coming soon!</p>;
 }

@@ -1,3 +1,3 @@
 export default function Budgets() {
-    return null;
+    return <p>Budgets page coming soon!</p>;
 }
