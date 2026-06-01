@@ -37,7 +37,6 @@ class Signup(Resource):
 
             return make_response(jsonify({
                 'access_token': access_token,
-                'refresh_token': refresh_token,
                 'user': CreateUserSchema().dump(user)
             }), 201)
 
