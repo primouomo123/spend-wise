@@ -1,3 +1,3 @@
 export default function Categories() {
-    return null;
+    return <p>Categories page coming soon!</p>;
 }
