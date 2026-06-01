@@ -1,13 +1,13 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-import { Budget } from "./pages/Budget";
-import { Categories } from "./pages/Categories";
-import { Dashboard } from "./pages/Dashboard";
-import { Home } from "./pages/Home";
-import { Login } from "./pages/Login";
-import { Me } from "./pages/Me";
-import { Signup } from "./pages/Signup";
-import { Transactions } from "./pages/Transactions";
+import Budgets from "./pages/Budgets";
+import Categories from "./pages/Categories";
+import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Me from "./pages/Me";
+import SignUp from "./pages/SignUp";
+import Transactions from "./pages/Transactions";
 
 function App() {
 
@@ -18,10 +18,10 @@ function App() {
           <Route index element={<Dashboard />} />
           <Route path="categories" element={<Categories />} />
           <Route path="transactions" element={<Transactions />} />
-          <Route path="budget" element={<Budget />} />
+          <Route path="budget" element={<Budgets />} />
           <Route path="me" element={<Me />} />
           <Route path="login" element={<Login />} />
-          <Route path="signup" element={<Signup />} />
+          <Route path="signup" element={<SignUp />} />
         </Route>
       </Routes>
     </BrowserRouter>
