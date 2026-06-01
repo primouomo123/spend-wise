@@ -21,9 +21,14 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv("DATABASE_URI")
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.json.compact = False
 
+# CORS configuration to allow requests from the frontend running on localhost:5173 or 127.0.0.1:5173
 CORS(
     app,
-    resources={r"/api/*": {"origins": "http://localhost:5173"}}
+    resources={
+        r"/api/*": {
+            "origins": ["http://localhost:5173", "http://127.0.0.1:5173"]
+        }
+    }
 )
 
 jwt = JWTManager(app)
