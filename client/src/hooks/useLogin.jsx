@@ -11,6 +11,7 @@ export default function useLogin() {
     async function login(username, password) {
         setLoginIsLoading(true);
         setLoginError(null);
+        setLoginUser(null);
 
         try {
             const response = await axios.post(`${ENDPOINT}/login`, {
@@ -37,5 +38,5 @@ export default function useLogin() {
         }
     };
 
-    return { login, loginError, loginIsLoading, loginUser };
+    return { login, loginError, setLoginError, loginIsLoading, setLoginIsLoading, loginUser, setLoginUser };
 }
