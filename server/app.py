@@ -7,7 +7,7 @@ from resources import *
 
 @app.before_request
 def check_if_logged_in():
-    open_access_list = ['signup', 'login']
+    open_access_list = ['signup', 'login', 'refresh']
 
     if request.endpoint and request.endpoint not in open_access_list:
         try:

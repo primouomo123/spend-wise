@@ -1,7 +1,7 @@
 from flask import request, jsonify, make_response
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-from flask_jwt_extended import create_access_token, create_refresh_token
+from flask_jwt_extended import create_access_token, create_refresh_token, set_refresh_cookies
 
 from config import db
 from models import CreateUserSchema, Category
@@ -35,10 +35,12 @@ class Signup(Resource):
                 if not category1 or not category2 or not category3 or not category4:
                     return make_response(jsonify({'error': 'Failed to create default categories'}), 500)
 
-            return make_response(jsonify({
+            response = make_response(jsonify({
                 'access_token': access_token,
                 'user': CreateUserSchema().dump(user)
             }), 201)
+            set_refresh_cookies(response, refresh_token)
+            return response
 
         except ValidationError as e:
             db.session.rollback()
