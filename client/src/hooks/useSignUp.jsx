@@ -11,6 +11,7 @@ export default function useSignUp() {
   async function signUp(username, email, password) {
     setSignUpIsLoading(true);
     setSignUpError(null);
+    setSignUpUser(null);
 
     try {
       const response = await axios.post(`${ENDPOINT}/signup`, {
@@ -40,5 +41,5 @@ export default function useSignUp() {
 
   };
 
-  return { signUp, signUpError, signUpIsLoading, signUpUser };
+  return { signUp, signUpError, setSignUpError, signUpIsLoading, setSignUpIsLoading, signUpUser, setSignUpUser };
 }
