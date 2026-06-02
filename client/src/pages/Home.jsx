@@ -5,7 +5,7 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { lightTheme, darkTheme } from "../style/theme";
 
 import Header from "../components/Header";
-import { useUserContext } from "../context/UserContext";
+import { useUserContext } from "../contexts/UserContext";
 
 export default function Home() {
     const navigate = useNavigate();
