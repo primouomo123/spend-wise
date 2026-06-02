@@ -8,7 +8,7 @@ import Login from "./pages/Login";
 import Me from "./pages/Me";
 import SignUp from "./pages/SignUp";
 import Transactions from "./pages/Transactions";
-import { useUserContext } from "./context/UserContext";
+import { useUserContext } from "./contexts/UserContext";
 
 function ProtectedRoute() {
   const { currentUser, authIsLoading } = useUserContext();
