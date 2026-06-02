@@ -1,7 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
-
-const ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
+import api from "../../api/api";
 
 export default function useSignUp() {
   const [signUpError, setSignUpError] = useState(null);
@@ -14,7 +12,7 @@ export default function useSignUp() {
     setSignUpUser(null);
 
     try {
-      const response = await axios.post(`${ENDPOINT}/signup`, {
+      const response = await api.post("/signup", {
         username,
         email,
         password,

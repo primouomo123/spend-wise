@@ -1,7 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
-
-const ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
+import api from "../../api/api";
 
 export default function useLogin() {
     const [loginError, setLoginError] = useState(null);
@@ -14,7 +12,7 @@ export default function useLogin() {
         setLoginUser(null);
 
         try {
-            const response = await axios.post(`${ENDPOINT}/login`, {
+            const response = await api.post("/login", {
                 username,
                 password,
             });

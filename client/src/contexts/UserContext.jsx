@@ -13,6 +13,26 @@ export function UserProvider({ children }) {
     const [currentUser, setCurrentUser] = useState(null);
     const [authIsLoading, setAuthIsLoading] = useState(true);
 
+    const clearAuthState = useCallback(() => {
+        localStorage.removeItem('token');
+        setCurrentUser(null);
+    }, []);
+
+    const refreshAccessToken = useCallback(async () => {
+        const refreshResponse = await axios.post(`${ENDPOINT}/refresh`, {}, {
+            withCredentials: true,
+        });
+
+        const nextAccessToken = refreshResponse?.data?.access_token;
+
+        if (!nextAccessToken) {
+            throw new Error('No access token returned from refresh endpoint.');
+        }
+
+        localStorage.setItem('token', nextAccessToken);
+        return nextAccessToken;
+    }, []);
+
     useEffect(() => {
         async function bootstrapAuth() {
             const token = localStorage.getItem('token');
@@ -24,21 +44,37 @@ export function UserProvider({ children }) {
 
             try {
                 const response = await axios.get(`${ENDPOINT}/me`, {
+                    withCredentials: true,
                     headers: {
                         Authorization: `Bearer ${token}`,
                     },
                 });
                 setCurrentUser(response.data.user ?? null);
-            } catch {
-                localStorage.removeItem('token');
-                setCurrentUser(null);
+            } catch (error) {
+                if (error?.response?.status === 401) {
+                    try {
+                        const newAccessToken = await refreshAccessToken();
+                        const retryResponse = await axios.get(`${ENDPOINT}/me`, {
+                            withCredentials: true,
+                            headers: {
+                                Authorization: `Bearer ${newAccessToken}`,
+                            },
+                        });
+
+                        setCurrentUser(retryResponse.data.user ?? null);
+                    } catch {
+                        clearAuthState();
+                    }
+                } else {
+                    clearAuthState();
+                }
             } finally {
                 setAuthIsLoading(false);
             }
         }
 
         bootstrapAuth();
-    }, []);
+    }, [clearAuthState, refreshAccessToken]);
 
     useEffect(() => {
         if (signUpUser) {
@@ -53,15 +89,22 @@ export function UserProvider({ children }) {
     }, [loginUser]);
 
     const logout = useCallback(() => {
-        localStorage.removeItem('token');
-        setCurrentUser(null);
+        clearAuthState();
         setSignUpUser(null);
         setLoginUser(null);
         setSignUpError(null);
         setLoginError(null);
         setSignUpIsLoading(false);
         setLoginIsLoading(false);
-    }, []);
+    }, [
+        clearAuthState,
+        setSignUpUser,
+        setLoginUser,
+        setSignUpError,
+        setLoginError,
+        setSignUpIsLoading,
+        setLoginIsLoading,
+    ]);
 
     const value = useMemo(() => ({
         signUp,
