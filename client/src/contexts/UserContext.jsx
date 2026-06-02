@@ -1,7 +1,7 @@
 import { useState, createContext, useContext, useEffect, useMemo, useCallback } from 'react';
 import axios from 'axios';
-import useSignUp from '../hooks/useSignUp';
-import useLogin from '../hooks/useLogin';
+import useSignUp from '../hooks/auth_hooks/useSignUp';
+import useLogin from '../hooks/auth_hooks/useLogin';
 
 const UserContext = createContext(null);
 const ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
