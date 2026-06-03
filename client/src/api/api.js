@@ -1,5 +1,7 @@
 import axios from "axios";
 
+export const AUTH_LOGOUT_EVENT = "auth:logout";
+
 const BASE_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const api = axios.create({
@@ -58,6 +60,7 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       localStorage.removeItem("token");
+      window.dispatchEvent(new Event(AUTH_LOGOUT_EVENT));
       return Promise.reject(refreshError);
     } finally {
       refreshPromise = null;

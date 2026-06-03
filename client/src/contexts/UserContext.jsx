@@ -2,6 +2,7 @@ import { useState, createContext, useContext, useEffect, useMemo, useCallback } 
 import axios from 'axios';
 import useSignUp from '../hooks/auth_hooks/useSignUp';
 import useLogin from '../hooks/auth_hooks/useLogin';
+import { AUTH_LOGOUT_EVENT } from '../api/api';
 
 const UserContext = createContext(null);
 const ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
@@ -17,6 +18,24 @@ export function UserProvider({ children }) {
         localStorage.removeItem('token');
         setCurrentUser(null);
     }, []);
+
+    const resetSessionState = useCallback(() => {
+        clearAuthState();
+        setSignUpUser(null);
+        setLoginUser(null);
+        setSignUpError(null);
+        setLoginError(null);
+        setSignUpIsLoading(false);
+        setLoginIsLoading(false);
+    }, [
+        clearAuthState,
+        setSignUpUser,
+        setLoginUser,
+        setSignUpError,
+        setLoginError,
+        setSignUpIsLoading,
+        setLoginIsLoading,
+    ]);
 
     const refreshAccessToken = useCallback(async () => {
         const refreshResponse = await axios.post(`${ENDPOINT}/refresh`, {}, {
@@ -77,6 +96,18 @@ export function UserProvider({ children }) {
     }, [clearAuthState, refreshAccessToken]);
 
     useEffect(() => {
+        function handleAuthLogout() {
+            resetSessionState();
+        }
+
+        window.addEventListener(AUTH_LOGOUT_EVENT, handleAuthLogout);
+
+        return () => {
+            window.removeEventListener(AUTH_LOGOUT_EVENT, handleAuthLogout);
+        };
+    }, [resetSessionState]);
+
+    useEffect(() => {
         if (signUpUser) {
             setCurrentUser(signUpUser);
         }
@@ -89,22 +120,8 @@ export function UserProvider({ children }) {
     }, [loginUser]);
 
     const logout = useCallback(() => {
-        clearAuthState();
-        setSignUpUser(null);
-        setLoginUser(null);
-        setSignUpError(null);
-        setLoginError(null);
-        setSignUpIsLoading(false);
-        setLoginIsLoading(false);
-    }, [
-        clearAuthState,
-        setSignUpUser,
-        setLoginUser,
-        setSignUpError,
-        setLoginError,
-        setSignUpIsLoading,
-        setLoginIsLoading,
-    ]);
+        resetSessionState();
+    }, [resetSessionState]);
 
     const value = useMemo(() => ({
         signUp,
