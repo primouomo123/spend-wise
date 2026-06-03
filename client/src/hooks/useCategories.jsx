@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import api from "../api/api";
 
 export default function useCategories() {
@@ -14,11 +14,11 @@ export default function useCategories() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  function parseError(err, fallback) {
+  const parseError = useCallback((err, fallback) => {
     return err.response?.data?.error || err.response?.data?.errors || fallback;
-  }
+  }, []);
 
-  function setPaginationFromResponse(data, fallbackPage, fallbackPerPage) {
+  const setPaginationFromResponse = useCallback((data, fallbackPage, fallbackPerPage) => {
     const page = data?.page ?? fallbackPage;
     const perPage = data?.per_page ?? fallbackPerPage;
     const total = data?.total ?? 0;
@@ -32,10 +32,10 @@ export default function useCategories() {
       hasNext: page < totalPages,
       hasPrev: page > 1,
     });
-  }
+  }, []);
 
   // READ
-  async function getCategories({ page = 1, perPage = 20 } = {}) {
+  const getCategories = useCallback(async ({ page = 1, perPage = 20 } = {}) => {
     setIsLoading(true);
     setError(null);
 
@@ -55,10 +55,10 @@ export default function useCategories() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [setPaginationFromResponse]);
 
   // CREATE
-  async function createCategory(data) {
+  const createCategory = useCallback(async (data) => {
     setIsLoading(true);
     setError(null);
 
@@ -73,10 +73,10 @@ export default function useCategories() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [parseError]);
 
   // UPDATE
-  async function updateCategory(id, data) {
+  const updateCategory = useCallback(async (id, data) => {
     setIsLoading(true);
     setError(null);
 
@@ -95,10 +95,10 @@ export default function useCategories() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [parseError]);
 
   // DELETE
-  async function deleteCategory(id) {
+  const deleteCategory = useCallback(async (id) => {
     setIsLoading(true);
     setError(null);
 
@@ -112,7 +112,7 @@ export default function useCategories() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [parseError]);
 
   return {
     categories,
