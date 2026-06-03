@@ -1,11 +1,9 @@
 import { useState, createContext, useContext, useEffect, useMemo, useCallback } from 'react';
-import axios from 'axios';
 import useSignUp from '../hooks/auth_hooks/useSignUp';
 import useLogin from '../hooks/auth_hooks/useLogin';
-import { AUTH_LOGOUT_EVENT } from '../api/api';
+import api, { AUTH_LOGOUT_EVENT } from '../api/api';
 
 const UserContext = createContext(null);
-const ENDPOINT = import.meta.env.VITE_API_ENDPOINT;
 
 export function UserProvider({ children }) {
     const { signUp, signUpError, setSignUpError, signUpIsLoading, setSignUpIsLoading, signUpUser, setSignUpUser } = useSignUp();
@@ -37,21 +35,6 @@ export function UserProvider({ children }) {
         setLoginIsLoading,
     ]);
 
-    const refreshAccessToken = useCallback(async () => {
-        const refreshResponse = await axios.post(`${ENDPOINT}/refresh`, {}, {
-            withCredentials: true,
-        });
-
-        const nextAccessToken = refreshResponse?.data?.access_token;
-
-        if (!nextAccessToken) {
-            throw new Error('No access token returned from refresh endpoint.');
-        }
-
-        localStorage.setItem('token', nextAccessToken);
-        return nextAccessToken;
-    }, []);
-
     useEffect(() => {
         async function bootstrapAuth() {
             const token = localStorage.getItem('token');
@@ -62,38 +45,17 @@ export function UserProvider({ children }) {
             }
 
             try {
-                const response = await axios.get(`${ENDPOINT}/me`, {
-                    withCredentials: true,
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                const response = await api.get('/me');
                 setCurrentUser(response.data.user ?? null);
-            } catch (error) {
-                if (error?.response?.status === 401) {
-                    try {
-                        const newAccessToken = await refreshAccessToken();
-                        const retryResponse = await axios.get(`${ENDPOINT}/me`, {
-                            withCredentials: true,
-                            headers: {
-                                Authorization: `Bearer ${newAccessToken}`,
-                            },
-                        });
-
-                        setCurrentUser(retryResponse.data.user ?? null);
-                    } catch {
-                        clearAuthState();
-                    }
-                } else {
-                    clearAuthState();
-                }
+            } catch {
+                clearAuthState();
             } finally {
                 setAuthIsLoading(false);
             }
         }
 
         bootstrapAuth();
-    }, [clearAuthState, refreshAccessToken]);
+    }, [clearAuthState]);
 
     useEffect(() => {
         function handleAuthLogout() {
