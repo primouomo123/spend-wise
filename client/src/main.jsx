@@ -4,12 +4,21 @@ import './index.css'
 import App from './App.jsx'
 import { UserProvider } from './contexts/UserContext.jsx';
 import { CategoryProvider } from './contexts/CategoryContext.jsx';
+import { TransactionProvider } from './contexts/TransactionContext.jsx';
+import { BudgetProvider } from './contexts/BudgetContext.jsx';
+import { DashboardProvider } from './contexts/DashboardContext.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <UserProvider>
       <CategoryProvider>
-        <App />
+        <TransactionProvider>
+          <BudgetProvider>
+            <DashboardProvider>
+              <App />
+            </DashboardProvider>
+          </BudgetProvider>
+        </TransactionProvider>
       </CategoryProvider>
     </UserProvider>
   </StrictMode>,
