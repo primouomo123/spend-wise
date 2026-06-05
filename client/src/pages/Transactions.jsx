@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+    Autocomplete,
     Alert,
     Box,
     Button,
@@ -37,8 +38,6 @@ const MONTH_OPTIONS = [
     { value: 11, label: "November" },
     { value: 12, label: "December" },
 ];
-
-const CURRENCY_OPTIONS = ["USD", "EUR", "GBP", "CAD", "JPY", "AUD"];
 
 function getInitialFormData() {
     const now = new Date();
@@ -96,6 +95,18 @@ function formatDate(value) {
     return date.toLocaleDateString();
 }
 
+function formatCurrencyOptionLabel(currencyOption) {
+    if (!currencyOption) return "";
+    if (currencyOption.name && currencyOption.name !== currencyOption.code) {
+        return `${currencyOption.code} - ${currencyOption.name}`;
+    }
+    return currencyOption.code;
+}
+
+function normalizeCurrency(value) {
+    return String(value ?? "").trim().toUpperCase();
+}
+
 export default function Transactions() {
     const {
         categories,
@@ -105,6 +116,7 @@ export default function Transactions() {
 
     const {
         transactions,
+        currencyOptions,
         transactionQuery,
         pagination,
         transactionsIsLoading,
@@ -151,6 +163,26 @@ export default function Transactions() {
         editForm.transaction_type === "income"
             ? [{ id: "income", name: "income" }]
             : expenseCategoryOptions;
+
+    const currencyCodeOptions = useMemo(
+        () => currencyOptions.map((currency) => currency.code),
+        [currencyOptions]
+    );
+
+    const currencyNameByCode = useMemo(() => {
+        const entries = currencyOptions.map((currency) => [currency.code, currency.name]);
+        return new Map(entries);
+    }, [currencyOptions]);
+
+    function filterCurrencyOptions(options, state) {
+        const term = String(state.inputValue ?? "").trim().toLowerCase();
+        if (!term) return options;
+
+        return options.filter((code) => {
+            const name = String(currencyNameByCode.get(code) ?? "").toLowerCase();
+            return code.toLowerCase().includes(term) || name.includes(term);
+        });
+    }
 
     function handleCreateFieldChange(field, value) {
         setCreateForm((prev) => ({
@@ -424,19 +456,42 @@ export default function Transactions() {
                                 fullWidth
                                 inputProps={{ min: "0.01", step: "0.01" }}
                             />
-                            <TextField
-                                select
-                                label="Currency"
-                                value={createForm.currency}
-                                onChange={(event) => handleCreateFieldChange("currency", event.target.value)}
+                            <Autocomplete
+                                freeSolo
                                 fullWidth
-                            >
-                                {CURRENCY_OPTIONS.map((currency) => (
-                                    <MenuItem key={currency} value={currency}>
-                                        {currency}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                                options={currencyCodeOptions}
+                                filterOptions={filterCurrencyOptions}
+                                value={createForm.currency}
+                                inputValue={createForm.currency}
+                                getOptionLabel={(option) => normalizeCurrency(option)}
+                                renderOption={(props, option) => {
+                                    const currencyOption = {
+                                        code: option,
+                                        name: currencyNameByCode.get(option) || option,
+                                    };
+
+                                    return (
+                                        <li {...props} key={option}>
+                                            {formatCurrencyOptionLabel(currencyOption)}
+                                        </li>
+                                    );
+                                }}
+                                onChange={(_event, value) => {
+                                    const nextCurrency = typeof value === "string" ? value : "";
+                                    handleCreateFieldChange("currency", normalizeCurrency(nextCurrency));
+                                }}
+                                onInputChange={(_event, value, reason) => {
+                                    if (reason === "reset") return;
+                                    handleCreateFieldChange("currency", normalizeCurrency(value));
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Currency"
+                                        helperText="Type or choose a currency"
+                                    />
+                                )}
+                            />
                             <TextField
                                 select
                                 label="Type"
@@ -597,19 +652,42 @@ export default function Transactions() {
                                 inputProps={{ min: "0.01", step: "0.01" }}
                             />
 
-                            <TextField
-                                select
-                                label="Currency"
-                                value={editForm.currency}
-                                onChange={(event) => handleEditFieldChange("currency", event.target.value)}
+                            <Autocomplete
+                                freeSolo
                                 fullWidth
-                            >
-                                {CURRENCY_OPTIONS.map((currency) => (
-                                    <MenuItem key={currency} value={currency}>
-                                        {currency}
-                                    </MenuItem>
-                                ))}
-                            </TextField>
+                                options={currencyCodeOptions}
+                                filterOptions={filterCurrencyOptions}
+                                value={editForm.currency}
+                                inputValue={editForm.currency}
+                                getOptionLabel={(option) => normalizeCurrency(option)}
+                                renderOption={(props, option) => {
+                                    const currencyOption = {
+                                        code: option,
+                                        name: currencyNameByCode.get(option) || option,
+                                    };
+
+                                    return (
+                                        <li {...props} key={option}>
+                                            {formatCurrencyOptionLabel(currencyOption)}
+                                        </li>
+                                    );
+                                }}
+                                onChange={(_event, value) => {
+                                    const nextCurrency = typeof value === "string" ? value : "";
+                                    handleEditFieldChange("currency", normalizeCurrency(nextCurrency));
+                                }}
+                                onInputChange={(_event, value, reason) => {
+                                    if (reason === "reset") return;
+                                    handleEditFieldChange("currency", normalizeCurrency(value));
+                                }}
+                                renderInput={(params) => (
+                                    <TextField
+                                        {...params}
+                                        label="Currency"
+                                        helperText="Type or choose a currency"
+                                    />
+                                )}
+                            />
 
                             <TextField
                                 select

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     Alert,
@@ -6,7 +5,6 @@ import {
     Button,
     Card,
     CardContent,
-    Chip,
     CircularProgress,
     Stack,
     Typography,
@@ -43,15 +41,6 @@ export default function Me() {
     const navigate = useNavigate();
     const { currentUser, authIsLoading, logout } = useUserContext();
 
-    const tokenStatus = useMemo(() => {
-        const hasAccessToken = Boolean(localStorage.getItem("token"));
-        const hasRefreshToken = Boolean(localStorage.getItem("refresh_token"));
-
-        if (hasAccessToken && hasRefreshToken) return { label: "Active", color: "success" };
-        if (hasAccessToken || hasRefreshToken) return { label: "Partial", color: "warning" };
-        return { label: "Missing", color: "default" };
-    }, []);
-
     function handleLogout() {
         logout();
         navigate("/login", { replace: true });
@@ -77,7 +66,7 @@ export default function Me() {
                         Me
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Account details and session state.
+                        Account details.
                     </Typography>
                 </Box>
 
@@ -96,10 +85,10 @@ export default function Me() {
         <Stack spacing={2.5} sx={{ pb: 3 }}>
             <Box>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    Me
+                    Profile
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                    Review your profile and current session.
+                    Review your profile details.
                 </Typography>
             </Box>
 
@@ -108,7 +97,6 @@ export default function Me() {
                     <Stack spacing={1.25}>
                         <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1}>
                             <Typography variant="h6">Profile</Typography>
-                            <Chip label={`Session: ${tokenStatus.label}`} color={tokenStatus.color} size="small" />
                         </Stack>
 
                         <DetailRow label="Username" value={currentUser.username} />

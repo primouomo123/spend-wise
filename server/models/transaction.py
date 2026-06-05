@@ -7,7 +7,7 @@ from marshmallow import Schema, fields, validate, validates as schema_validates,
 
 from config import db
 
-from utils import TRANSACTION_TYPES
+from utils import TRANSACTION_TYPES, get_supported_currency_codes
 
 class Transaction(db.Model):
     """Transaction model for recording income and expenses."""
@@ -45,7 +45,13 @@ class Transaction(db.Model):
     def validate_currency(self, key, value):
         if not isinstance(value, str) or len(value) != 3:
             raise ValueError(f"{key} must be a 3-letter currency code.")
-        return value
+
+        normalized = value.strip().upper()
+        supported_currency_codes = get_supported_currency_codes()
+        if normalized not in supported_currency_codes:
+            raise ValueError(f"{key} must be one of the supported currencies.")
+
+        return normalized
     
     @model_validates('transaction_type')
     def validate_transaction_type(self, key, value):
@@ -109,6 +115,11 @@ class TransactionSchema(Schema):
     def validate_currency(self, value, **kwargs):
         if not isinstance(value, str) or len(value) != 3:
             raise ValidationError("Currency must be a 3-letter code.")
+
+        normalized = value.strip().upper()
+        supported_currency_codes = get_supported_currency_codes()
+        if normalized not in supported_currency_codes:
+            raise ValidationError("Currency must be in the supported currency list.")
     
     @schema_validates('amount_usd')
     def validate_amount_usd(self, value, **kwargs):
