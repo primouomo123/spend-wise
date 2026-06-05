@@ -7,4 +7,4 @@ class TokenRefresh(Resource):
     def post(self):
         identity = get_jwt_identity()
         new_access_token = create_access_token(identity=identity)
-        return jsonify(access_token=new_access_token), 200
+        return {"access_token": new_access_token}, 200
