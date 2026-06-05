@@ -76,6 +76,10 @@ export default function Categories() {
         return categoriesError;
     }, [actionError, categoriesError]);
 
+    const visibleCategories = useMemo(() => {
+        return categories.filter((category) => String(category.name).toLowerCase() !== "income");
+    }, [categories]);
+
     /* ---------------- CREATE ---------------- */
 
     async function handleCreate(event) {
@@ -253,12 +257,12 @@ export default function Categories() {
             >
                 <CardContent>
                     <Stack spacing={1}>
-                        {categories.length === 0 ? (
+                        {visibleCategories.length === 0 ? (
                             <Typography color="text.secondary">
                                 No categories yet.
                             </Typography>
                         ) : (
-                            categories.map((category, index) => (
+                            visibleCategories.map((category, index) => (
                                 <Box key={category.id}>
                                     <Box
                                         sx={{
@@ -301,7 +305,7 @@ export default function Categories() {
                                         </Stack>
                                     </Box>
 
-                                    {index !== categories.length - 1 && (
+                                    {index !== visibleCategories.length - 1 && (
                                         <Divider />
                                     )}
                                 </Box>
@@ -322,7 +326,7 @@ export default function Categories() {
                 }}
             >
                 <Typography variant="body2" color="text.secondary">
-                    Total: {pagination.total}
+                    Total: {visibleCategories.length}
                 </Typography>
 
                 <Pagination
