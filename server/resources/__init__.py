@@ -1,5 +1,6 @@
 from .signup import Signup
 from .login import Login
+from .logout import Logout
 from .who_am_i import WhoAmI
 from .token_refresh import TokenRefresh
 from .category_list import CategoryList

@@ -9,8 +9,8 @@ export default function Home() {
     const navigate = useNavigate();
     const { logout } = useUserContext();
 
-    const handleLogout = () => {
-        logout();
+    const handleLogout = async () => {
+        await logout();
         navigate("/login", { replace: true });
     };
 
