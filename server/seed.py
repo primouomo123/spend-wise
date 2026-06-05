@@ -114,7 +114,94 @@ with app.app_context():
         user_id=user2.id,
         category_id=8
     )
-    db.session.add_all([transaction1, transaction2, transaction3, transaction4, transaction5, transaction6, transaction7, transaction8])
+
+    transaction9 = Transaction(
+        amount=3050.00,
+        currency='USD',
+        amount_usd=3050.00,
+        transaction_type='income',
+        date=datetime.date(2026, 6, 5),
+        description='Salary',
+        user_id=user1.id,
+        category_id=1
+    )
+    transaction10 = Transaction(
+        amount=65.00,
+        currency='USD',
+        amount_usd=65.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 6, 2),
+        description='Weekly groceries',
+        user_id=user1.id,
+        category_id=2
+    )
+    transaction11 = Transaction(
+        amount=1200.00,
+        currency='USD',
+        amount_usd=1200.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 6, 1),
+        description='Monthly rent',
+        user_id=user1.id,
+        category_id=3
+    )
+    transaction12 = Transaction(
+        amount=90.00,
+        currency='USD',
+        amount_usd=90.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 6, 4),
+        description='Utilities and misc',
+        user_id=user1.id,
+        category_id=4
+    )
+    transaction13 = Transaction(
+        amount=3250.00,
+        currency='USD',
+        amount_usd=3250.00,
+        transaction_type='income',
+        date=datetime.date(2026, 6, 5),
+        description='Salary',
+        user_id=user2.id,
+        category_id=5
+    )
+    transaction14 = Transaction(
+        amount=75.00,
+        currency='USD',
+        amount_usd=75.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 6, 2),
+        description='Food for the week',
+        user_id=user2.id,
+        category_id=6
+    )
+    transaction15 = Transaction(
+        amount=1300.00,
+        currency='USD',
+        amount_usd=1300.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 6, 3),
+        description='Monthly rent',
+        user_id=user2.id,
+        category_id=7
+    )
+    transaction16 = Transaction(
+        amount=120.00,
+        currency='USD',
+        amount_usd=120.00,
+        transaction_type='expense',
+        date=datetime.date(2026, 6, 4),
+        description='Household supplies',
+        user_id=user2.id,
+        category_id=8
+    )
+
+    db.session.add_all([
+        transaction1, transaction2, transaction3, transaction4,
+        transaction5, transaction6, transaction7, transaction8,
+        transaction9, transaction10, transaction11, transaction12,
+        transaction13, transaction14, transaction15, transaction16,
+    ])
     db.session.commit()
 
     print("Seeding budgets...")
@@ -175,8 +262,70 @@ with app.app_context():
         category_id=8
     )
 
+    budget9 = Budget(
+        amount=3050.00,
+        month=6,
+        year=2026,
+        user_id=user1.id,
+        category_id=1
+    )
+    budget10 = Budget(
+        amount=550.00,
+        month=6,
+        year=2026,
+        user_id=user1.id,
+        category_id=2
+    )
+    budget11 = Budget(
+        amount=1200.00,
+        month=6,
+        year=2026,
+        user_id=user1.id,
+        category_id=3
+    )
+    budget12 = Budget(
+        amount=300.00,
+        month=6,
+        year=2026,
+        user_id=user1.id,
+        category_id=4
+    )
+    budget13 = Budget(
+        amount=3250.00,
+        month=6,
+        year=2026,
+        user_id=user2.id,
+        category_id=5
+    )
+    budget14 = Budget(
+        amount=650.00,
+        month=6,
+        year=2026,
+        user_id=user2.id,
+        category_id=6
+    )
+    budget15 = Budget(
+        amount=1300.00,
+        month=6,
+        year=2026,
+        user_id=user2.id,
+        category_id=7
+    )
+    budget16 = Budget(
+        amount=250.00,
+        month=6,
+        year=2026,
+        user_id=user2.id,
+        category_id=8
+    )
 
-    db.session.add_all([budget1, budget2, budget3, budget4, budget5, budget6, budget7, budget8])
+
+    db.session.add_all([
+        budget1, budget2, budget3, budget4,
+        budget5, budget6, budget7, budget8,
+        budget9, budget10, budget11, budget12,
+        budget13, budget14, budget15, budget16,
+    ])
     db.session.commit()
 
     print("Seeding completed!")
