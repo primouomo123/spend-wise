@@ -21,6 +21,23 @@ import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 import { useCategoryContext } from "../contexts/CategoryContext";
 
+function normalizeError(error) {
+    if (!error) return null;
+    if (Array.isArray(error)) return error.join(", ");
+    if (typeof error === "object") return Object.values(error).flat().join(", ");
+    return error;
+}
+
+function getRequestError(err, fallback) {
+    return (
+        normalizeError(err?.response?.data?.error) ||
+        normalizeError(err?.response?.data?.errors) ||
+        normalizeError(err?.response?.data?.details) ||
+        normalizeError(err?.message) ||
+        fallback
+    );
+}
+
 export default function Categories() {
     const {
         categories,
@@ -65,8 +82,8 @@ export default function Categories() {
             await createCategory({ name });
             setNewCategoryName("");
             await getCategories({ page: pagination.page, perPage: pagination.perPage });
-        } catch {
-            setActionError("Could not create category.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not create category."));
         }
     }
 
@@ -96,8 +113,8 @@ export default function Categories() {
             await updateCategory(editTarget.id, { name });
             closeEditDialog();
             await getCategories({ page: pagination.page, perPage: pagination.perPage });
-        } catch {
-            setActionError("Could not update category.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not update category."));
         }
     }
 
@@ -107,8 +124,8 @@ export default function Categories() {
         try {
             await deleteCategory(categoryId);
             await getCategories({ page: pagination.page, perPage: pagination.perPage });
-        } catch {
-            setActionError("Could not delete category.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not delete category."));
         }
     }
 

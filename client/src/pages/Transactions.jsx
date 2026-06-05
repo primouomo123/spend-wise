@@ -61,6 +61,16 @@ function normalizeError(error) {
     return error;
 }
 
+function getRequestError(err, fallback) {
+    return (
+        normalizeError(err?.response?.data?.error) ||
+        normalizeError(err?.response?.data?.errors) ||
+        normalizeError(err?.response?.data?.details) ||
+        normalizeError(err?.message) ||
+        fallback
+    );
+}
+
 function formatCurrency(value, currency) {
     const parsed = Number(value);
     if (Number.isNaN(parsed)) return "-";
@@ -229,8 +239,8 @@ export default function Transactions() {
             await createTransaction(buildPayload(createForm));
             setCreateForm(getInitialFormData());
             await getTransactions({ page: 1 });
-        } catch {
-            setActionError("Could not create transaction.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not create transaction."));
         }
     }
 
@@ -271,8 +281,8 @@ export default function Transactions() {
                 month: queryInputs.month,
                 year: queryInputs.year,
             });
-        } catch {
-            setActionError("Could not update transaction.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not update transaction."));
         }
     }
 
@@ -287,8 +297,8 @@ export default function Transactions() {
                 month: queryInputs.month,
                 year: queryInputs.year,
             });
-        } catch {
-            setActionError("Could not delete transaction.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not delete transaction."));
         }
     }
 

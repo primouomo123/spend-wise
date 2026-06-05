@@ -38,6 +38,16 @@ function normalizeError(error) {
     return error;
 }
 
+function getRequestError(err, fallback) {
+    return (
+        normalizeError(err?.response?.data?.error) ||
+        normalizeError(err?.response?.data?.errors) ||
+        normalizeError(err?.response?.data?.details) ||
+        normalizeError(err?.message) ||
+        fallback
+    );
+}
+
 function formatUsd(value) {
     const parsed = Number(value);
     if (Number.isNaN(parsed)) return "-";
@@ -163,8 +173,8 @@ export default function Dashboard() {
 
         try {
             await getSummary({ month, year });
-        } catch {
-            setActionError("Could not fetch dashboard summary.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not fetch dashboard summary."));
         }
     }
 

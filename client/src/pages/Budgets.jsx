@@ -56,6 +56,16 @@ function normalizeError(error) {
     return error;
 }
 
+function getRequestError(err, fallback) {
+    return (
+        normalizeError(err?.response?.data?.error) ||
+        normalizeError(err?.response?.data?.errors) ||
+        normalizeError(err?.response?.data?.details) ||
+        normalizeError(err?.message) ||
+        fallback
+    );
+}
+
 function formatAmount(value) {
     const numeric = Number(value);
     if (Number.isNaN(numeric)) return "-";
@@ -202,8 +212,8 @@ export default function Budgets() {
                 month: Number(queryInputs.month),
                 year: Number(queryInputs.year),
             });
-        } catch {
-            setActionError("Could not create budget.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not create budget."));
         }
     }
 
@@ -249,8 +259,8 @@ export default function Budgets() {
                 month: Number(queryInputs.month),
                 year: Number(queryInputs.year),
             });
-        } catch {
-            setActionError("Could not update budget.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not update budget."));
         }
     }
 
@@ -266,8 +276,8 @@ export default function Budgets() {
                 month: Number(queryInputs.month),
                 year: Number(queryInputs.year),
             });
-        } catch {
-            setActionError("Could not delete budget.");
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not delete budget."));
         }
     }
 
