@@ -15,6 +15,12 @@ import {
     MenuItem,
     Pagination,
     Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
     TextField,
     Typography,
 } from "@mui/material";
@@ -376,19 +382,30 @@ export default function Transactions() {
     }
 
     return (
-        <Stack spacing={2.5} sx={{ pb: 3 }}>
-            <Box>
-                <Typography variant="h4" component="h1" gutterBottom>
+        <Stack spacing={3} sx={{ pb: 4, alignItems: "center" }}>
+            <Box sx={{ width: "100%", maxWidth: 980, mx: "auto" }}>
+                <Typography variant="h4" component="h1" fontWeight={700} gutterBottom>
                     Transactions
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 620 }}>
                     Track your income and expenses for each month.
                 </Typography>
             </Box>
 
-            {displayError ? <Alert severity="error">{displayError}</Alert> : null}
+            {displayError ? (
+                <Alert severity="error" sx={{ width: "100%", maxWidth: 980, mx: "auto" }}>
+                    {displayError}
+                </Alert>
+            ) : null}
 
-            <Card>
+            <Card
+                sx={{
+                    width: "fit-content",
+                    maxWidth: "100%",
+                    mx: "auto",
+                    borderRadius: 3,
+                }}
+            >
                 <CardContent>
                     <Stack
                         component="form"
@@ -396,6 +413,7 @@ export default function Transactions() {
                         spacing={1}
                         alignItems={{ sm: "flex-end" }}
                         onSubmit={handleApplyFilters}
+                        sx={{ width: "fit-content" }}
                     >
                         <TextField
                             select
@@ -442,10 +460,17 @@ export default function Transactions() {
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardContent>
+            <Card
+                sx={{
+                    width: "100%",
+                    maxWidth: 760,
+                    mx: "auto",
+                    borderRadius: 3,
+                }}
+            >
+                <CardContent sx={{ p: { xs: 1.75, sm: 2 } }}>
                     <Stack component="form" spacing={1.5} onSubmit={handleCreate}>
-                        <Typography variant="h6">Add Transaction</Typography>
+                        <Typography variant="h6" fontWeight={700}>Add Transaction</Typography>
 
                         <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                             <TextField
@@ -547,7 +572,14 @@ export default function Transactions() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card
+                sx={{
+                    width: "100%",
+                    maxWidth: 980,
+                    mx: "auto",
+                    borderRadius: 3,
+                }}
+            >
                 <CardContent>
                     {transactionsIsLoading ? (
                         <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
@@ -556,62 +588,66 @@ export default function Transactions() {
                     ) : transactions.length === 0 ? (
                         <Typography color="text.secondary">No transactions found for this period.</Typography>
                     ) : (
-                        <Stack spacing={1}>
-                            {transactions.map((transaction) => (
-                                <Box
-                                    key={transaction.id}
-                                    sx={{
-                                        border: "1px solid",
-                                        borderColor: "divider",
-                                        borderRadius: 2,
-                                        p: 1.5,
-                                    }}
-                                >
-                                    <Stack
-                                        direction={{ xs: "column", sm: "row" }}
-                                        justifyContent="space-between"
-                                        spacing={1}
-                                    >
-                                        <Box>
-                                            <Typography variant="subtitle1" sx={{ textTransform: "capitalize" }}>
+                        <TableContainer sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Type</TableCell>
+                                        <TableCell>Category</TableCell>
+                                        <TableCell>Date</TableCell>
+                                        <TableCell>Description</TableCell>
+                                        <TableCell align="right">Amount</TableCell>
+                                        <TableCell align="right">USD Equivalent</TableCell>
+                                        <TableCell align="right">Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {transactions.map((transaction) => (
+                                        <TableRow
+                                            key={transaction.id}
+                                            hover
+                                            sx={{
+                                                "& td": { verticalAlign: "top" },
+                                            }}
+                                        >
+                                            <TableCell sx={{ textTransform: "capitalize", fontWeight: 600 }}>
                                                 {transaction.transaction_type}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {transaction.category_name} • {formatDate(transaction.date)}
-                                            </Typography>
-                                        </Box>
-
-                                        <Stack direction="row" spacing={0.5}>
-                                            <IconButton
-                                                size="small"
-                                                onClick={() => openEditDialog(transaction)}
-                                                aria-label={`Edit transaction ${transaction.id}`}
-                                            >
-                                                <EditRoundedIcon fontSize="small" />
-                                            </IconButton>
-                                            <IconButton
-                                                size="small"
-                                                color="error"
-                                                onClick={() => handleDelete(transaction.id)}
-                                                aria-label={`Delete transaction ${transaction.id}`}
-                                            >
-                                                <DeleteOutlineRoundedIcon fontSize="small" />
-                                            </IconButton>
-                                        </Stack>
-                                    </Stack>
-
-                                    <Typography variant="h6" sx={{ mt: 1 }}>
-                                        {formatCurrency(transaction.amount, transaction.currency)}
-                                    </Typography>
-                                    <Typography variant="body2" color="text.secondary">
-                                        USD equivalent: {formatCurrency(transaction.amount_usd, "USD")}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ mt: 0.75 }}>
-                                        {transaction.description}
-                                    </Typography>
-                                </Box>
-                            ))}
-                        </Stack>
+                                            </TableCell>
+                                            <TableCell>{transaction.category_name}</TableCell>
+                                            <TableCell>{formatDate(transaction.date)}</TableCell>
+                                            <TableCell sx={{ maxWidth: 280, wordBreak: "break-word" }}>
+                                                {transaction.description}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 700 }}>
+                                                {formatCurrency(transaction.amount, transaction.currency)}
+                                            </TableCell>
+                                            <TableCell align="right" sx={{ color: "text.secondary" }}>
+                                                {formatCurrency(transaction.amount_usd, "USD")}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => openEditDialog(transaction)}
+                                                        aria-label={`Edit transaction ${transaction.id}`}
+                                                    >
+                                                        <EditRoundedIcon fontSize="small" />
+                                                    </IconButton>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="error"
+                                                        onClick={() => handleDelete(transaction.id)}
+                                                        aria-label={`Delete transaction ${transaction.id}`}
+                                                    >
+                                                        <DeleteOutlineRoundedIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Stack>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     )}
                 </CardContent>
             </Card>
@@ -623,6 +659,9 @@ export default function Transactions() {
                     alignItems: "center",
                     gap: 1,
                     flexWrap: "wrap",
+                    width: "100%",
+                    maxWidth: 980,
+                    mx: "auto",
                 }}
             >
                 <Typography variant="body2" color="text.secondary">

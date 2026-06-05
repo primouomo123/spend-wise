@@ -14,6 +14,12 @@ import {
     MenuItem,
     Pagination,
     Stack,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
     TextField,
     Typography,
 } from "@mui/material";
@@ -291,8 +297,8 @@ export default function Budgets() {
     }
 
     return (
-        <Stack spacing={2.5} sx={{ pb: 3 }}>
-            <Box>
+        <Stack spacing={3} sx={{ pb: 4, alignItems: "center" }}>
+            <Box sx={{ width: "100%", maxWidth: 900, mx: "auto" }}>
                 <Typography variant="h4" component="h1" gutterBottom>
                     Budgets
                 </Typography>
@@ -301,9 +307,19 @@ export default function Budgets() {
                 </Typography>
             </Box>
 
-            {displayError ? <Alert severity="error">{displayError}</Alert> : null}
+            {displayError ? (
+                <Alert severity="error" sx={{ width: "100%", maxWidth: 900, mx: "auto" }}>
+                    {displayError}
+                </Alert>
+            ) : null}
 
-            <Card>
+            <Card
+                sx={{
+                    width: "fit-content",
+                    maxWidth: "100%",
+                    mx: "auto",
+                }}
+            >
                 <CardContent>
                     <Stack
                         component="form"
@@ -311,6 +327,7 @@ export default function Budgets() {
                         spacing={1}
                         alignItems={{ sm: "flex-end" }}
                         onSubmit={handleApplyFilters}
+                        sx={{ width: "fit-content" }}
                     >
                         <TextField
                             select
@@ -342,7 +359,13 @@ export default function Budgets() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card
+                sx={{
+                    width: "100%",
+                    maxWidth: 760,
+                    mx: "auto",
+                }}
+            >
                 <CardContent>
                     <Stack component="form" spacing={1.5} onSubmit={handleCreate}>
                         <Typography variant="h6">Add Budget</Typography>
@@ -406,7 +429,13 @@ export default function Budgets() {
                 </CardContent>
             </Card>
 
-            <Card>
+            <Card
+                sx={{
+                    width: "100%",
+                    maxWidth: 900,
+                    mx: "auto",
+                }}
+            >
                 <CardContent>
                     {budgetsIsLoading ? (
                         <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
@@ -415,58 +444,61 @@ export default function Budgets() {
                     ) : budgets.length === 0 ? (
                         <Typography color="text.secondary">No budgets found for this period.</Typography>
                     ) : (
-                        <Stack spacing={1}>
-                            {budgets.map((budget) => (
-                                <Box
-                                    key={budget.id}
-                                    sx={{
-                                        border: "1px solid",
-                                        borderColor: "divider",
-                                        borderRadius: 2,
-                                        px: 1.5,
-                                        py: 1.25,
-                                    }}
-                                >
-                                    <Stack
-                                        direction={{ xs: "column", sm: "row" }}
-                                        justifyContent="space-between"
-                                        spacing={1}
-                                    >
-                                        <Box>
-                                            <Typography variant="subtitle1" sx={{ textTransform: "capitalize" }}>
+                        <TableContainer sx={{ borderRadius: 2, border: "1px solid", borderColor: "divider" }}>
+                            <Table size="small">
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Category</TableCell>
+                                        <TableCell>Month</TableCell>
+                                        <TableCell>Year</TableCell>
+                                        <TableCell align="right">Amount</TableCell>
+                                        <TableCell align="right">Actions</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {budgets.map((budget) => (
+                                        <TableRow
+                                            key={budget.id}
+                                            hover
+                                            sx={{
+                                                "& td": { verticalAlign: "top" },
+                                            }}
+                                        >
+                                            <TableCell sx={{ textTransform: "capitalize", fontWeight: 600 }}>
                                                 {budget.category_name}
-                                            </Typography>
-                                            <Typography variant="body2" color="text.secondary">
-                                                {MONTH_OPTIONS.find((m) => m.value === budget.month)?.label ?? budget.month} {budget.year}
-                                            </Typography>
-                                        </Box>
+                                            </TableCell>
+                                            <TableCell>
+                                                {MONTH_OPTIONS.find((m) => m.value === budget.month)?.label ?? budget.month}
+                                            </TableCell>
+                                            <TableCell>{budget.year}</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 700 }}>
+                                                {formatAmount(budget.amount)}
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                                                    <IconButton
+                                                        size="small"
+                                                        onClick={() => openEditDialog(budget)}
+                                                        aria-label={`Edit budget ${budget.id}`}
+                                                    >
+                                                        <EditRoundedIcon fontSize="small" />
+                                                    </IconButton>
 
-                                        <Stack direction="row" spacing={0.5}>
-                                            <IconButton
-                                                size="small"
-                                                onClick={() => openEditDialog(budget)}
-                                                aria-label={`Edit budget ${budget.id}`}
-                                            >
-                                                <EditRoundedIcon fontSize="small" />
-                                            </IconButton>
-
-                                            <IconButton
-                                                size="small"
-                                                color="error"
-                                                onClick={() => handleDelete(budget.id)}
-                                                aria-label={`Delete budget ${budget.id}`}
-                                            >
-                                                <DeleteOutlineRoundedIcon fontSize="small" />
-                                            </IconButton>
-                                        </Stack>
-                                    </Stack>
-
-                                    <Typography variant="h6" sx={{ mt: 1 }}>
-                                        {formatAmount(budget.amount)}
-                                    </Typography>
-                                </Box>
-                            ))}
-                        </Stack>
+                                                    <IconButton
+                                                        size="small"
+                                                        color="error"
+                                                        onClick={() => handleDelete(budget.id)}
+                                                        aria-label={`Delete budget ${budget.id}`}
+                                                    >
+                                                        <DeleteOutlineRoundedIcon fontSize="small" />
+                                                    </IconButton>
+                                                </Stack>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
                     )}
                 </CardContent>
             </Card>
@@ -478,6 +510,9 @@ export default function Budgets() {
                     alignItems: "center",
                     gap: 1,
                     flexWrap: "wrap",
+                    width: "100%",
+                    maxWidth: 900,
+                    mx: "auto",
                 }}
             >
                 <Typography variant="body2" color="text.secondary">

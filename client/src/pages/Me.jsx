@@ -12,6 +12,8 @@ import {
 
 import { useUserContext } from "../contexts/UserContext";
 
+const PAGE_MAX_WIDTH = 720;
+
 function DetailRow({ label, value }) {
     return (
         <Box
@@ -39,16 +41,11 @@ function DetailRow({ label, value }) {
 
 export default function Me() {
     const navigate = useNavigate();
-    const { currentUser, authIsLoading, logout } = useUserContext();
-
-    function handleLogout() {
-        logout();
-        navigate("/login", { replace: true });
-    }
+    const { currentUser, authIsLoading } = useUserContext();
 
     if (authIsLoading) {
         return (
-            <Card>
+            <Card sx={{ width: "100%", maxWidth: PAGE_MAX_WIDTH, mx: "auto", borderRadius: 3 }}>
                 <CardContent>
                     <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
                         <CircularProgress />
@@ -60,17 +57,19 @@ export default function Me() {
 
     if (!currentUser) {
         return (
-            <Stack spacing={2.5} sx={{ pb: 3 }}>
+            <Stack spacing={3} sx={{ pb: 4, width: "100%", maxWidth: PAGE_MAX_WIDTH, mx: "auto" }}>
                 <Box>
-                    <Typography variant="h4" component="h1" gutterBottom>
+                    <Typography variant="h4" component="h1" fontWeight={700} gutterBottom>
                         Me
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560 }}>
                         Account details.
                     </Typography>
                 </Box>
 
-                <Alert severity="warning">No active user session was found.</Alert>
+                <Alert severity="warning" sx={{ width: "100%" }}>
+                    No active user session was found.
+                </Alert>
 
                 <Box>
                     <Button variant="contained" onClick={() => navigate("/login")}>
@@ -82,42 +81,25 @@ export default function Me() {
     }
 
     return (
-        <Stack spacing={2.5} sx={{ pb: 3 }}>
+        <Stack spacing={3} sx={{ pb: 4, width: "100%", maxWidth: PAGE_MAX_WIDTH, mx: "auto" }}>
             <Box>
-                <Typography variant="h4" component="h1" gutterBottom>
-                    Profile
+                <Typography variant="h4" component="h1" fontWeight={700} gutterBottom>
+                    {currentUser.username}
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 560 }}>
                     Review your profile details.
                 </Typography>
             </Box>
 
-            <Card>
+            <Card sx={{ width: "100%", borderRadius: 3 }}>
                 <CardContent>
                     <Stack spacing={1.25}>
                         <Stack direction={{ xs: "column", sm: "row" }} justifyContent="space-between" spacing={1}>
-                            <Typography variant="h6">Profile</Typography>
+                            <Typography variant="h6" fontWeight={700}>Profile</Typography>
                         </Stack>
 
                         <DetailRow label="Username" value={currentUser.username} />
                         <DetailRow label="Email" value={currentUser.email} />
-                    </Stack>
-                </CardContent>
-            </Card>
-
-            <Card>
-                <CardContent>
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1} justifyContent="space-between" alignItems={{ sm: "center" }}>
-                        <Box>
-                            <Typography variant="subtitle1">Sign Out</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                End your current session on this browser.
-                            </Typography>
-                        </Box>
-
-                        <Button variant="outlined" color="error" onClick={handleLogout}>
-                            Logout
-                        </Button>
                     </Stack>
                 </CardContent>
             </Card>

@@ -7,6 +7,7 @@ import { CategoryProvider } from './contexts/CategoryContext.jsx';
 import { TransactionProvider } from './contexts/TransactionContext.jsx';
 import { BudgetProvider } from './contexts/BudgetContext.jsx';
 import { DashboardProvider } from './contexts/DashboardContext.jsx';
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -15,7 +16,9 @@ createRoot(document.getElementById('root')).render(
         <TransactionProvider>
           <BudgetProvider>
             <DashboardProvider>
-              <App />
+              <ThemeProvider>
+                <App />
+              </ThemeProvider>
             </DashboardProvider>
           </BudgetProvider>
         </TransactionProvider>
