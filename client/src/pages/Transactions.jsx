@@ -118,6 +118,7 @@ export default function Transactions() {
     const [queryInputs, setQueryInputs] = useState(() => ({
         month: transactionQuery?.month ?? new Date().getMonth() + 1,
         year: transactionQuery?.year ?? new Date().getFullYear(),
+        category_name: transactionQuery?.category_name ?? "",
     }));
     const [createForm, setCreateForm] = useState(getInitialFormData);
     const [editTarget, setEditTarget] = useState(null);
@@ -135,6 +136,10 @@ export default function Transactions() {
 
     const expenseCategoryOptions = useMemo(() => {
         return categories.filter((category) => category.name !== "income");
+    }, [categories]);
+
+    const categoryFilterOptions = useMemo(() => {
+        return [...categories].sort((a, b) => a.name.localeCompare(b.name));
     }, [categories]);
 
     const currentCreateCategoryOptions =
@@ -238,7 +243,13 @@ export default function Transactions() {
         try {
             await createTransaction(buildPayload(createForm));
             setCreateForm(getInitialFormData());
-            await getTransactions({ page: 1 });
+            await getTransactions({
+                page: 1,
+                perPage: pagination.perPage,
+                month: queryInputs.month,
+                year: queryInputs.year,
+                category_name: queryInputs.category_name,
+            });
         } catch (err) {
             setActionError(getRequestError(err, "Could not create transaction."));
         }
@@ -280,6 +291,7 @@ export default function Transactions() {
                 perPage: pagination.perPage,
                 month: queryInputs.month,
                 year: queryInputs.year,
+                category_name: queryInputs.category_name,
             });
         } catch (err) {
             setActionError(getRequestError(err, "Could not update transaction."));
@@ -296,6 +308,7 @@ export default function Transactions() {
                 perPage: pagination.perPage,
                 month: queryInputs.month,
                 year: queryInputs.year,
+                category_name: queryInputs.category_name,
             });
         } catch (err) {
             setActionError(getRequestError(err, "Could not delete transaction."));
@@ -308,6 +321,7 @@ export default function Transactions() {
             perPage: pagination.perPage,
             month: queryInputs.month,
             year: queryInputs.year,
+            category_name: queryInputs.category_name,
         });
     }
 
@@ -325,6 +339,7 @@ export default function Transactions() {
             perPage: pagination.perPage,
             month: Number(queryInputs.month),
             year: Number(queryInputs.year),
+            category_name: queryInputs.category_name,
         });
     }
 
@@ -372,6 +387,21 @@ export default function Transactions() {
                             sx={{ maxWidth: 140 }}
                             inputProps={{ min: 2000, max: 2100 }}
                         />
+
+                        <TextField
+                            select
+                            label="Category"
+                            value={queryInputs.category_name}
+                            onChange={(event) => setQueryInputs((prev) => ({ ...prev, category_name: event.target.value }))}
+                            sx={{ minWidth: 200 }}
+                        >
+                            <MenuItem value="">All categories</MenuItem>
+                            {categoryFilterOptions.map((category) => (
+                                <MenuItem key={category.id} value={category.name}>
+                                    {category.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
 
                         <Button type="submit" variant="outlined" disabled={transactionsIsLoading}>
                             Apply
