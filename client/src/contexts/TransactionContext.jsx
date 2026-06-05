@@ -1,12 +1,14 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import api from '../api/api';
 import useTransactions from '../hooks/useTransactions';
+import { useUserContext } from './UserContext';
 
 const TransactionContext = createContext(null);
 const DEFAULT_CURRENCY_OPTIONS = [{ code: 'USD', name: 'US Dollar' }];
 
 export function TransactionProvider({ children }) {
 	const [currencyOptions, setCurrencyOptions] = useState(DEFAULT_CURRENCY_OPTIONS);
+	const { currentUser, authIsLoading } = useUserContext();
 
 	const {
 		transactions,
@@ -24,6 +26,12 @@ export function TransactionProvider({ children }) {
 		let isMounted = true;
 
 		async function loadCurrencies() {
+			if (authIsLoading) return;
+			if (!currentUser) {
+				if (isMounted) setCurrencyOptions(DEFAULT_CURRENCY_OPTIONS);
+				return;
+			}
+
 			try {
 				const response = await api.get('/currencies');
 				const currencies = Array.isArray(response?.data)
@@ -64,7 +72,7 @@ export function TransactionProvider({ children }) {
 		return () => {
 			isMounted = false;
 		};
-	}, []);
+	}, [authIsLoading, currentUser]);
 
 	const value = useMemo(() => ({
 		transactions,
