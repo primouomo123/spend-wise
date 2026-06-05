@@ -101,12 +101,15 @@ export default function Dashboard() {
         Number(summary.transaction_balance ?? 0) -
         Number(summary.budget_balance ?? 0);
 
+    const transactionSummaries = summary.transaction_summaries ?? [];
+    const budgetSummaries = summary.budget_summaries ?? [];
+
     const budgetVsActual = useMemo(() => {
         const actualByCategory = new Map();
         const budgetByCategory = new Map();
         const incomeCategories = new Set();
 
-        for (const item of summary.transaction_summaries ?? []) {
+        for (const item of transactionSummaries) {
             const key = item.category_name;
 
             actualByCategory.set(
@@ -119,7 +122,7 @@ export default function Dashboard() {
             }
         }
 
-        for (const item of summary.budget_summaries ?? []) {
+        for (const item of budgetSummaries) {
             const key = item.category_name;
 
             budgetByCategory.set(
@@ -148,7 +151,7 @@ export default function Dashboard() {
                 diff: isIncome ? actual - budgeted : budgeted - actual,
             };
         });
-    }, [summary]);
+    }, [transactionSummaries, budgetSummaries]);
 
     /* ---------------- LOADING ---------------- */
 
@@ -322,24 +325,30 @@ export default function Dashboard() {
                             Transactions by Category
                         </Typography>
 
-                        <Stack spacing={1}>
-                            {summary.transaction_summaries?.map((item, i) => (
-                                <Box
-                                    key={i}
-                                    sx={{
-                                        p: 1.2,
-                                        borderRadius: 2,
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <Typography>{item.category_name}</Typography>
-                                    <Typography fontWeight={600}>
-                                        {formatUsd(item.total_amount)}
-                                    </Typography>
-                                </Box>
-                            ))}
-                        </Stack>
+                        {transactionSummaries.length === 0 ? (
+                            <Typography color="text.secondary" sx={{ mt: 1 }}>
+                                No transactions found for this period.
+                            </Typography>
+                        ) : (
+                            <Stack spacing={1}>
+                                {transactionSummaries.map((item, i) => (
+                                    <Box
+                                        key={i}
+                                        sx={{
+                                            p: 1.2,
+                                            borderRadius: 2,
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                        }}
+                                    >
+                                        <Typography>{item.category_name}</Typography>
+                                        <Typography fontWeight={600}>
+                                            {formatUsd(item.total_amount)}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        )}
                     </CardContent>
                 </Card>
 
@@ -349,24 +358,30 @@ export default function Dashboard() {
                             Budgets by Category
                         </Typography>
 
-                        <Stack spacing={1}>
-                            {summary.budget_summaries?.map((item, i) => (
-                                <Box
-                                    key={i}
-                                    sx={{
-                                        p: 1.2,
-                                        borderRadius: 2,
-                                        display: "flex",
-                                        justifyContent: "space-between",
-                                    }}
-                                >
-                                    <Typography>{item.category_name}</Typography>
-                                    <Typography fontWeight={600}>
-                                        {formatUsd(item.budgeted_amount)}
-                                    </Typography>
-                                </Box>
-                            ))}
-                        </Stack>
+                        {budgetSummaries.length === 0 ? (
+                            <Typography color="text.secondary" sx={{ mt: 1 }}>
+                                No budgets found for this period.
+                            </Typography>
+                        ) : (
+                            <Stack spacing={1}>
+                                {budgetSummaries.map((item, i) => (
+                                    <Box
+                                        key={i}
+                                        sx={{
+                                            p: 1.2,
+                                            borderRadius: 2,
+                                            display: "flex",
+                                            justifyContent: "space-between",
+                                        }}
+                                    >
+                                        <Typography>{item.category_name}</Typography>
+                                        <Typography fontWeight={600}>
+                                            {formatUsd(item.budgeted_amount)}
+                                        </Typography>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        )}
                     </CardContent>
                 </Card>
             </Stack>
@@ -378,36 +393,42 @@ export default function Dashboard() {
                         Budget vs Actual
                     </Typography>
 
-                    <Stack spacing={1}>
-                        {budgetVsActual.map((row) => (
-                            <Box
-                                key={row.category}
-                                sx={{
-                                    p: 1.2,
-                                    borderRadius: 2,
-                                    display: "flex",
-                                    justifyContent: "space-between",
-                                    flexWrap: "wrap",
-                                }}
-                            >
-                                <Typography sx={{ minWidth: 160 }}>
-                                    {row.category}
-                                </Typography>
+                    {budgetVsActual.length === 0 ? (
+                        <Typography color="text.secondary" sx={{ mt: 1 }}>
+                            No transactions or budgets found for this period.
+                        </Typography>
+                    ) : (
+                        <Stack spacing={1}>
+                            {budgetVsActual.map((row) => (
+                                <Box
+                                    key={row.category}
+                                    sx={{
+                                        p: 1.2,
+                                        borderRadius: 2,
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        flexWrap: "wrap",
+                                    }}
+                                >
+                                    <Typography sx={{ minWidth: 160 }}>
+                                        {row.category}
+                                    </Typography>
 
-                                <Typography>
-                                    Budget: {formatUsd(row.budgeted)}
-                                </Typography>
+                                    <Typography>
+                                        Budget: {formatUsd(row.budgeted)}
+                                    </Typography>
 
-                                <Typography>
-                                    Actual: {formatUsd(row.actual)}
-                                </Typography>
+                                    <Typography>
+                                        Actual: {formatUsd(row.actual)}
+                                    </Typography>
 
-                                <Typography sx={{ color: getDifferenceTone(row.diff), fontWeight: 600 }}>
-                                    Diff: {formatUsd(row.diff)}
-                                </Typography>
-                            </Box>
-                        ))}
-                    </Stack>
+                                    <Typography sx={{ color: getDifferenceTone(row.diff), fontWeight: 600 }}>
+                                        Diff: {formatUsd(row.diff)}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Stack>
+                    )}
                 </CardContent>
             </Card>
 

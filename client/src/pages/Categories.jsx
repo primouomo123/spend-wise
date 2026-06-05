@@ -249,8 +249,9 @@ export default function Categories() {
             {/* LIST */}
             <Card
                 sx={{
-                    width: "100%",
-                    maxWidth: 760,
+                    width: "fit-content",
+                    minWidth: 400,
+                    maxWidth: 500,
                     mx: "auto",
                     alignSelf: "center",
                 }}
