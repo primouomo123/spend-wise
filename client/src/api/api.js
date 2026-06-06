@@ -2,7 +2,19 @@ import axios from "axios";
 
 export const AUTH_LOGOUT_EVENT = "auth:logout";
 
-const BASE_URL = import.meta.env.VITE_API_ENDPOINT;
+function normalizeApiBaseUrl(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "/api";
+
+  const withoutTrailingSlash = raw.replace(/\/+$/, "");
+  if (withoutTrailingSlash.endsWith("/api")) {
+    return withoutTrailingSlash;
+  }
+
+  return `${withoutTrailingSlash}/api`;
+}
+
+const BASE_URL = normalizeApiBaseUrl(import.meta.env.VITE_API_ENDPOINT);
 
 const api = axios.create({
   baseURL: BASE_URL,
