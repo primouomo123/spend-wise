@@ -6,9 +6,9 @@ from marshmallow import ValidationError
 
 from models import Transaction, UpdateTransactionSchema, Category
 from config import db
-from utils import get_exchange_rate, TRANSACTION_TYPES
+from utils import get_exchange_rate, TRANSACTION_TYPES, quantize_money
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 
 
 class TransactionDetail(Resource):
@@ -126,14 +126,12 @@ class TransactionDetail(Resource):
         # -------------------------
         if "amount" in patch_data:
             try:
-                amount = Decimal(str(patch_data["amount"]))
+                amount = quantize_money(patch_data["amount"])
             except Exception:
                 return make_response(jsonify({"error": "Invalid amount"}), 400)
 
             if amount <= 0:
                 return make_response(jsonify({"error": "Amount must be positive"}), 400)
-
-            amount = amount.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
         # -------------------------
         # CURRENCY UPDATE
@@ -152,10 +150,7 @@ class TransactionDetail(Resource):
                     500
                 )
 
-            amount_usd = (amount * Decimal(str(exchange_rate))).quantize(
-                Decimal("0.01"),
-                rounding=ROUND_HALF_UP
-            )
+            amount_usd = quantize_money(amount * Decimal(str(exchange_rate)))
         else:
             amount_usd = amount
 

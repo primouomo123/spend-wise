@@ -8,8 +8,9 @@ from marshmallow import ValidationError
 
 from models import Budget, BudgetSchema, CreateBudgetSchema, Category
 from config import db
+from utils import quantize_money
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 
 class BudgetList(Resource):
     """Resource for listing and creating budgets."""
@@ -82,7 +83,7 @@ class BudgetList(Resource):
         if not amount or amount is None:
             return make_response(jsonify({"error": "amount is required"}), 400)
         try:
-            amount = Decimal(str(amount)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+            amount = quantize_money(amount)
             request_json["amount"] = amount
         except Exception:
             return make_response(jsonify({"error": "amount must be a valid number"}), 400)

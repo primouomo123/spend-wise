@@ -8,9 +8,9 @@ from marshmallow import ValidationError
 
 from models import Transaction, CreateTransactionSchema, Category
 from config import db
-from utils import get_exchange_rate, TRANSACTION_TYPES
+from utils import get_exchange_rate, TRANSACTION_TYPES, quantize_money
 
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal
 
 
 class TransactionList(Resource):
@@ -134,10 +134,7 @@ class TransactionList(Resource):
             return make_response(jsonify({"error": "Amount is required"}), 400)
 
         try:
-            amount = Decimal(str(amount_raw)).quantize(
-                Decimal("0.01"),
-                rounding=ROUND_HALF_UP
-            )
+            amount = quantize_money(amount_raw)
         except Exception:
             return make_response(jsonify({"error": "Invalid amount"}), 400)
 
@@ -160,10 +157,7 @@ class TransactionList(Resource):
                         500
                     )
 
-                amount_usd = (amount * Decimal(str(exchange_rate))).quantize(
-                    Decimal("0.01"),
-                    rounding=ROUND_HALF_UP
-                )
+                amount_usd = quantize_money(amount * Decimal(str(exchange_rate)))
             else:
                 amount_usd = amount
 

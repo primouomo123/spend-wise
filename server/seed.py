@@ -42,7 +42,7 @@ with app.app_context():
         date=datetime.date(2026, 5, 5),
         description='Salary',
         user_id=user1.id,
-        category_id=1
+        category_id=category1.id
     )
     transaction2 = Transaction(
         amount=50.00,
@@ -52,7 +52,7 @@ with app.app_context():
         date=datetime.date(2026, 5, 15),
         description='Grocery shopping',
         user_id=user1.id,
-        category_id=2
+        category_id=category2.id
     )
     transaction3 = Transaction(
         amount=1200.00,
@@ -62,7 +62,7 @@ with app.app_context():
         date=datetime.date(2026, 5, 1),
         description='Monthly rent',
         user_id=user1.id,
-        category_id=3
+        category_id=category3.id
     )
     transaction4 = Transaction(
         amount=200.00,
@@ -72,7 +72,7 @@ with app.app_context():
         date=datetime.date(2026, 5, 20),
         description='New headphones',
         user_id=user1.id,
-        category_id=4
+        category_id=category4.id
     )
     transaction5 = Transaction(
         amount=3200.00,
@@ -82,7 +82,7 @@ with app.app_context():
         date=datetime.date(2026, 5, 5),
         description='Salary',
         user_id=user2.id,
-        category_id=5
+        category_id=category5.id
     )
     transaction6 = Transaction(
         amount=60.00,
@@ -92,7 +92,7 @@ with app.app_context():
         date=datetime.date(2026, 5, 18),
         description='Food for the month',
         user_id=user2.id,
-        category_id=6
+        category_id=category6.id
     )
     transaction7 = Transaction(
         amount=1300.00,
@@ -102,7 +102,7 @@ with app.app_context():
         date=datetime.date(2026, 5, 3),
         description='Monthly rent',
         user_id=user2.id,
-        category_id=7
+        category_id=category7.id
     )
     transaction8 = Transaction(
         amount=150.00,
@@ -112,7 +112,7 @@ with app.app_context():
         date=datetime.date(2026, 5, 22),
         description='Concert tickets',
         user_id=user2.id,
-        category_id=8
+        category_id=category8.id
     )
 
     transaction9 = Transaction(
@@ -123,7 +123,7 @@ with app.app_context():
         date=datetime.date(2026, 6, 5),
         description='Salary',
         user_id=user1.id,
-        category_id=1
+        category_id=category1.id
     )
     transaction10 = Transaction(
         amount=65.00,
@@ -133,7 +133,7 @@ with app.app_context():
         date=datetime.date(2026, 6, 2),
         description='Weekly groceries',
         user_id=user1.id,
-        category_id=2
+        category_id=category2.id
     )
     transaction11 = Transaction(
         amount=1200.00,
@@ -143,7 +143,7 @@ with app.app_context():
         date=datetime.date(2026, 6, 1),
         description='Monthly rent',
         user_id=user1.id,
-        category_id=3
+        category_id=category3.id
     )
     transaction12 = Transaction(
         amount=90.00,
@@ -153,7 +153,7 @@ with app.app_context():
         date=datetime.date(2026, 6, 4),
         description='Utilities and misc',
         user_id=user1.id,
-        category_id=4
+        category_id=category4.id
     )
     transaction13 = Transaction(
         amount=3250.00,
@@ -163,7 +163,7 @@ with app.app_context():
         date=datetime.date(2026, 6, 5),
         description='Salary',
         user_id=user2.id,
-        category_id=5
+        category_id=category5.id
     )
     transaction14 = Transaction(
         amount=75.00,
@@ -173,7 +173,7 @@ with app.app_context():
         date=datetime.date(2026, 6, 2),
         description='Food for the week',
         user_id=user2.id,
-        category_id=6
+        category_id=category6.id
     )
     transaction15 = Transaction(
         amount=1300.00,
@@ -183,7 +183,7 @@ with app.app_context():
         date=datetime.date(2026, 6, 3),
         description='Monthly rent',
         user_id=user2.id,
-        category_id=7
+        category_id=category7.id
     )
     transaction16 = Transaction(
         amount=120.00,
@@ -193,7 +193,7 @@ with app.app_context():
         date=datetime.date(2026, 6, 4),
         description='Household supplies',
         user_id=user2.id,
-        category_id=8
+        category_id=category8.id
     )
 
     db.session.add_all([
@@ -210,56 +210,56 @@ with app.app_context():
         month=5,
         year=2026,
         user_id=user1.id,
-        category_id=1
+        category_id=category1.id
     )
     budget2 = Budget(
         amount=500.00,
         month=5,
         year=2026,
         user_id=user1.id,
-        category_id=2
+        category_id=category2.id
     )
     budget3 = Budget(
         amount=1200.00,
         month=5,
         year=2026,
         user_id=user1.id,
-        category_id=3
+        category_id=category3.id
     )
     budget4 = Budget(
         amount=300.00,
         month=5,
         year=2026,
         user_id=user1.id,
-        category_id=4
+        category_id=category4.id
     )
     budget5 = Budget(
         amount=3200.00,
         month=5,
         year=2026,
         user_id=user2.id,
-        category_id=5
+        category_id=category5.id
     )
     budget6 = Budget(
         amount=600.00,
         month=5,
         year=2026,
         user_id=user2.id,
-        category_id=6
+        category_id=category6.id
     )
     budget7 = Budget(
         amount=1300.00,
         month=5,
         year=2026,
         user_id=user2.id,
-        category_id=7
+        category_id=category7.id
     )
     budget8 = Budget(
         amount=200.00,
         month=5,
         year=2026,
         user_id=user2.id,
-        category_id=8
+        category_id=category8.id
     )
 
     budget9 = Budget(
@@ -267,56 +267,56 @@ with app.app_context():
         month=6,
         year=2026,
         user_id=user1.id,
-        category_id=1
+        category_id=category1.id
     )
     budget10 = Budget(
         amount=550.00,
         month=6,
         year=2026,
         user_id=user1.id,
-        category_id=2
+        category_id=category2.id
     )
     budget11 = Budget(
         amount=1200.00,
         month=6,
         year=2026,
         user_id=user1.id,
-        category_id=3
+        category_id=category3.id
     )
     budget12 = Budget(
         amount=300.00,
         month=6,
         year=2026,
         user_id=user1.id,
-        category_id=4
+        category_id=category4.id
     )
     budget13 = Budget(
         amount=3250.00,
         month=6,
         year=2026,
         user_id=user2.id,
-        category_id=5
+        category_id=category5.id
     )
     budget14 = Budget(
         amount=650.00,
         month=6,
         year=2026,
         user_id=user2.id,
-        category_id=6
+        category_id=category6.id
     )
     budget15 = Budget(
         amount=1300.00,
         month=6,
         year=2026,
         user_id=user2.id,
-        category_id=7
+        category_id=category7.id
     )
     budget16 = Budget(
         amount=250.00,
         month=6,
         year=2026,
         user_id=user2.id,
-        category_id=8
+        category_id=category8.id
     )
 
 
