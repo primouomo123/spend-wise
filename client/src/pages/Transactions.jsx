@@ -47,11 +47,14 @@ const MONTH_OPTIONS = [
 
 function getInitialFormData() {
     const now = new Date();
+    const localDate = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .split("T")[0];
     return {
         amount: "",
         currency: "USD",
         transaction_type: "expense",
-        date: now.toISOString().split("T")[0],
+        date: localDate,
         description: "",
         category_name: "",
     };
@@ -95,7 +98,15 @@ function formatCurrency(value, currency) {
 function formatDate(value) {
     if (!value) return "-";
 
-    const date = new Date(value);
+    // Date-only strings (YYYY-MM-DD) should be rendered as local calendar dates.
+    const dateOnlyMatch = String(value).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const date = dateOnlyMatch
+        ? new Date(
+            Number(dateOnlyMatch[1]),
+            Number(dateOnlyMatch[2]) - 1,
+            Number(dateOnlyMatch[3])
+        )
+        : new Date(value);
     if (Number.isNaN(date.getTime())) return value;
 
     return date.toLocaleDateString();

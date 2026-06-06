@@ -133,8 +133,7 @@ export default function Budgets() {
     }, [getCategories, getBudgets]);
 
     const budgetCategories = useMemo(() => {
-        const expenseCategories = categories.filter((category) => category.name !== "income");
-        return expenseCategories.length > 0 ? expenseCategories : categories;
+        return categories;
     }, [categories]);
 
     const displayError = useMemo(() => {
