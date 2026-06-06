@@ -20,6 +20,13 @@ function getInitialSummaryState() {
 		budget_total_income: "0.00",
 		budget_total_expenses: "0.00",
 		budget_balance: "0.00",
+		budget_tracking: [],
+		overspending: {
+			is_any_category_overspent: false,
+			overspent_category_count: 0,
+			overspent_total_amount: "0.00",
+			overspent_categories: [],
+		},
 	};
 }
 
@@ -77,6 +84,13 @@ export default function useDashboard() {
 				budget_total_income: data.budget_total_income ?? "0.00",
 				budget_total_expenses: data.budget_total_expenses ?? "0.00",
 				budget_balance: data.budget_balance ?? "0.00",
+				budget_tracking: data.budget_tracking ?? [],
+				overspending: data.overspending ?? {
+					is_any_category_overspent: false,
+					overspent_category_count: 0,
+					overspent_total_amount: "0.00",
+					overspent_categories: [],
+				},
 			});
 
 			return data;

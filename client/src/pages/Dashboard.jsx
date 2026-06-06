@@ -109,55 +109,16 @@ export default function Dashboard() {
         () => summary.budget_summaries ?? [],
         [summary.budget_summaries]
     );
-
-    const budgetVsActual = useMemo(() => {
-        const actualByCategory = new Map();
-        const budgetByCategory = new Map();
-        const incomeCategories = new Set();
-
-        for (const item of transactionSummaries) {
-            const key = item.category_name;
-
-            actualByCategory.set(
-                key,
-                (actualByCategory.get(key) ?? 0) + Number(item.total_amount ?? 0)
-            );
-
-            if (item.transaction_type?.toLowerCase() === "income") {
-                incomeCategories.add(key);
-            }
-        }
-
-        for (const item of budgetSummaries) {
-            const key = item.category_name;
-
-            budgetByCategory.set(
-                key,
-                (budgetByCategory.get(key) ?? 0) + Number(item.budgeted_amount ?? 0)
-            );
-        }
-
-        const all = new Set([
-            ...actualByCategory.keys(),
-            ...budgetByCategory.keys(),
-        ]);
-
-        return [...all].map((category) => {
-            const budgeted = budgetByCategory.get(category) ?? 0;
-            const actual = actualByCategory.get(category) ?? 0;
-
-            const isIncome =
-                incomeCategories.has(category) ||
-                category.toLowerCase() === "income";
-
-            return {
-                category,
-                budgeted,
-                actual,
-                diff: isIncome ? actual - budgeted : budgeted - actual,
-            };
-        });
-    }, [transactionSummaries, budgetSummaries]);
+    const budgetTracking = useMemo(
+        () => summary.budget_tracking ?? [],
+        [summary.budget_tracking]
+    );
+    const overspending = summary.overspending ?? {
+        is_any_category_overspent: false,
+        overspent_category_count: 0,
+        overspent_total_amount: "0.00",
+        overspent_categories: [],
+    };
 
     /* ---------------- LOADING ---------------- */
 
@@ -322,6 +283,43 @@ export default function Dashboard() {
                 </CardContent>
             </Card>
 
+            <Card>
+                <CardContent>
+                    <Typography variant="h6" fontWeight={700}>
+                        Overspending
+                    </Typography>
+
+                    {overspending.is_any_category_overspent ? (
+                        <Stack spacing={1} sx={{ mt: 1 }}>
+                            <Typography color="error.main" fontWeight={700}>
+                                Overspent Total: {formatUsd(overspending.overspent_total_amount)}
+                            </Typography>
+                            {overspending.overspent_categories.map((item) => (
+                                <Box
+                                    key={item.category_name}
+                                    sx={{
+                                        p: 1.2,
+                                        borderRadius: 2,
+                                        display: "flex",
+                                        justifyContent: "space-between",
+                                        flexWrap: "wrap",
+                                    }}
+                                >
+                                    <Typography>{item.category_name}</Typography>
+                                    <Typography fontWeight={600} color="error.main">
+                                        {formatUsd(item.overspent_amount)}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Stack>
+                    ) : (
+                        <Typography color="text.secondary" sx={{ mt: 1 }}>
+                            No categories are overspent for this period.
+                        </Typography>
+                    )}
+                </CardContent>
+            </Card>
+
             {/* DETAILS */}
             <Stack direction={{ xs: "column", lg: "row" }} spacing={2}>
 
@@ -399,15 +397,15 @@ export default function Dashboard() {
                         Budget vs Actual
                     </Typography>
 
-                    {budgetVsActual.length === 0 ? (
+                    {budgetTracking.length === 0 ? (
                         <Typography color="text.secondary" sx={{ mt: 1 }}>
                             No transactions or budgets found for this period.
                         </Typography>
                     ) : (
                         <Stack spacing={1}>
-                            {budgetVsActual.map((row) => (
+                            {budgetTracking.map((row) => (
                                 <Box
-                                    key={row.category}
+                                    key={`${row.category_name}-${row.transaction_type}`}
                                     sx={{
                                         p: 1.2,
                                         borderRadius: 2,
@@ -417,19 +415,19 @@ export default function Dashboard() {
                                     }}
                                 >
                                     <Typography sx={{ minWidth: 160 }}>
-                                        {row.category}
+                                        {row.category_name}
                                     </Typography>
 
                                     <Typography>
-                                        Budget: {formatUsd(row.budgeted)}
+                                        Budget: {formatUsd(row.budgeted_amount)}
                                     </Typography>
 
                                     <Typography>
-                                        Actual: {formatUsd(row.actual)}
+                                        Actual: {formatUsd(row.actual_amount)}
                                     </Typography>
 
-                                    <Typography sx={{ color: getDifferenceTone(row.diff), fontWeight: 600 }}>
-                                        Diff: {formatUsd(row.diff)}
+                                    <Typography sx={{ color: getDifferenceTone(row.difference), fontWeight: 600 }}>
+                                        Diff: {formatUsd(row.difference)}
                                     </Typography>
                                 </Box>
                             ))}
