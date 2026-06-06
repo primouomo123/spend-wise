@@ -20,6 +20,7 @@ class TransactionList(Resource):
     def get(self):
         page = request.args.get('page', 1, type=int)
         per_page = request.args.get('per_page', 20, type=int)
+        category_name = request.args.get('category_name', type=str)
 
         # Get month and year from query params, default to current month/year
         now = datetime.now()
@@ -40,6 +41,12 @@ class TransactionList(Resource):
                                   .filter(Transaction.user_id == user_id,
                                           extract('month', Transaction.date) == month,
                                           extract('year', Transaction.date) == year))
+
+        if category_name:
+            normalized_category = category_name.strip().lower()
+            if normalized_category:
+                query = query.filter(Category.name == normalized_category)
+
         pagination = (
             query
             .order_by(Transaction.date.desc())

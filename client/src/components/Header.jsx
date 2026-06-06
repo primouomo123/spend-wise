@@ -19,41 +19,18 @@ import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 
 import { useUserContext } from "../contexts/UserContext";
+import { useThemeContext } from "../contexts/ThemeContext";
 
-export default function Header({
-    isDarkMode,
-    onThemeToggle,
-    onLogout,
-}) {
-
+export default function Header({ onLogout }) {
     const { currentUser } = useUserContext();
+    const { isDarkMode, toggleTheme } = useThemeContext();
 
     const navLinks = [
-        {
-            to: "/",
-            label: "Dashboard",
-            icon: <DashboardOutlinedIcon fontSize="small" />,
-        },
-        {
-            to: "/categories",
-            label: "Categories",
-            icon: <CategoryOutlinedIcon fontSize="small" />,
-        },
-        {
-            to: "/transactions",
-            label: "Transactions",
-            icon: <ReceiptLongOutlinedIcon fontSize="small" />,
-        },
-        {
-            to: "/budget",
-            label: "Budget",
-            icon: <AccountBalanceWalletOutlinedIcon fontSize="small" />,
-        },
-        {
-            to: "/me",
-            label: currentUser ? currentUser.username : "Profile",
-            icon: <PersonOutlineOutlinedIcon fontSize="small" />,
-        },
+        { to: "/", label: "Dashboard", icon: <DashboardOutlinedIcon fontSize="small" /> },
+        { to: "/categories", label: "Categories", icon: <CategoryOutlinedIcon fontSize="small" /> },
+        { to: "/transactions", label: "Transactions", icon: <ReceiptLongOutlinedIcon fontSize="small" /> },
+        { to: "/budget", label: "Budget", icon: <AccountBalanceWalletOutlinedIcon fontSize="small" /> },
+        { to: "/me", label: "Profile", icon: <PersonOutlineOutlinedIcon fontSize="small" /> },
     ];
 
     return (
@@ -66,11 +43,10 @@ export default function Header({
                 zIndex: 1000,
 
                 px: { xs: 2, md: 3 },
-                py: 1.5,
+                py: 1.2,
                 mb: 4,
 
                 borderRadius: 3,
-
                 backdropFilter: "blur(14px)",
 
                 backgroundColor:
@@ -78,29 +54,31 @@ export default function Header({
                         ? "rgba(17,24,39,0.85)"
                         : "rgba(255,255,255,0.85)",
 
-                border: `1px solid ${alpha(
-                    theme.palette.text.primary,
-                    0.08
-                )}`,
+                border: `1px solid ${alpha(theme.palette.text.primary, 0.08)}`,
             })}
         >
-            <Stack
-                direction={{ xs: "column", md: "row" }}
-                alignItems="center"
-                justifyContent="space-between"
-                spacing={2}
+            {/* FLEX CONTAINER (FIXED RESPONSIVE LAYOUT) */}
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 2,
+                    flexWrap: "wrap",
+                }}
             >
-                {/* Logo */}
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    flexShrink={0}
+
+                {/* LEFT - LOGO */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        minWidth: 180,
+                        flexShrink: 0,
+                    }}
                 >
-                    <SavingsOutlinedIcon
-                        color="primary"
-                        sx={{ fontSize: 30 }}
-                    />
+                    <SavingsOutlinedIcon color="primary" sx={{ fontSize: 30 }} />
 
                     <Box>
                         <Typography
@@ -114,23 +92,23 @@ export default function Header({
                             SpendWise
                         </Typography>
 
-                        <Typography
-                            variant="caption"
-                            color="text.secondary"
-                        >
+                        <Typography variant="caption" color="text.secondary">
                             Personal Finance Tracker
                         </Typography>
                     </Box>
-                </Stack>
+                </Box>
 
-                {/* Navigation */}
-                <Stack
+                {/* CENTER - NAVIGATION */}
+                <Box
                     component="nav"
-                    direction="row"
-                    spacing={0.75}
-                    useFlexGap
-                    flexWrap="wrap"
-                    justifyContent="center"
+                    sx={{
+                        flex: 1,
+                        display: "flex",
+                        justifyContent: "center",
+                        flexWrap: "wrap",
+                        gap: 0.75,
+                        minWidth: 0,
+                    }}
                 >
                     {navLinks.map((link) => (
                         <Box
@@ -143,14 +121,11 @@ export default function Header({
                                 gap: 0.75,
 
                                 textDecoration: "none",
-
                                 px: 1.4,
                                 py: 0.85,
-
                                 borderRadius: 2,
 
                                 color: theme.palette.text.secondary,
-
                                 transition: "all 150ms ease",
 
                                 "&:hover": {
@@ -163,17 +138,14 @@ export default function Header({
 
                                 "&.active": {
                                     color: theme.palette.primary.main,
-
                                     backgroundColor: alpha(
                                         theme.palette.primary.main,
                                         0.12
                                     ),
-
                                     border: `1px solid ${alpha(
                                         theme.palette.primary.main,
                                         0.22
                                     )}`,
-
                                     fontWeight: 600,
                                 },
                             })}
@@ -188,19 +160,19 @@ export default function Header({
                             </Typography>
                         </Box>
                     ))}
-                </Stack>
+                </Box>
 
-                {/* Actions */}
-                <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    flexShrink={0}
+                {/* RIGHT - ACTIONS (ALWAYS STABLE) */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        flexShrink: 0,
+                        whiteSpace: "nowrap",
+                    }}
                 >
-                    <IconButton
-                        onClick={onThemeToggle}
-                        size="small"
-                    >
+                    <IconButton onClick={toggleTheme} size="small">
                         {isDarkMode ? (
                             <LightModeOutlinedIcon />
                         ) : (
@@ -221,8 +193,9 @@ export default function Header({
                     >
                         Logout
                     </Button>
-                </Stack>
-            </Stack>
+                </Box>
+
+            </Box>
         </Paper>
     );
 }

@@ -29,7 +29,7 @@ class Summary(Resource):
             db.session.query(
                 Category.name.label('category_name'),
                 Transaction.transaction_type,
-                func.sum(Transaction.amount).label('total_amount')
+                func.sum(Transaction.amount_usd).label('total_amount')
         )
         .join(Transaction, Transaction.category_id == Category.id)
         .filter(Transaction.user_id == user_id,

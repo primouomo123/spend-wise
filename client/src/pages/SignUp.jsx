@@ -10,6 +10,7 @@ import {
     TextField,
     Typography,
 } from "@mui/material";
+import SavingsOutlinedIcon from "@mui/icons-material/SavingsOutlined";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 
 import { useUserContext } from "../contexts/UserContext";
@@ -81,6 +82,25 @@ export default function SignUp() {
             <Card sx={{ width: "100%", maxWidth: 460 }}>
                 <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
                     <Stack spacing={3} component="form" onSubmit={handleSubmit}>
+                        <Stack direction="row" spacing={1} alignItems="center" justifyContent="center">
+                            <SavingsOutlinedIcon color="primary" sx={{ fontSize: 30 }} />
+                            <Box>
+                                <Typography
+                                    variant="h6"
+                                    sx={{
+                                        fontWeight: 700,
+                                        letterSpacing: "-0.03em",
+                                        lineHeight: 1.1,
+                                    }}
+                                >
+                                    SpendWise
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    Personal Finance Tracker
+                                </Typography>
+                            </Box>
+                        </Stack>
+
                         <Box>
                             <Typography variant="h4" component="h1" gutterBottom>
                                 Create your account

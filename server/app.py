@@ -7,7 +7,7 @@ from resources import *
 
 @app.before_request
 def check_if_logged_in():
-    open_access_list = ['signup', 'login', 'refresh']
+    open_access_list = ['signup', 'login', 'refresh', 'logout']
 
     if request.endpoint and request.endpoint not in open_access_list:
         try:
@@ -17,6 +17,7 @@ def check_if_logged_in():
 
 api.add_resource(Signup, '/api/signup', endpoint='signup')
 api.add_resource(Login, '/api/login', endpoint='login')
+api.add_resource(Logout, '/api/logout', endpoint='logout')
 api.add_resource(WhoAmI, '/api/me', endpoint='me')
 api.add_resource(TokenRefresh, '/api/refresh', endpoint='refresh')
 api.add_resource(CategoryList, '/api/categories', endpoint='categories')

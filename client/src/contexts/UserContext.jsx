@@ -81,8 +81,14 @@ export function UserProvider({ children }) {
         }
     }, [loginUser]);
 
-    const logout = useCallback(() => {
-        resetSessionState();
+    const logout = useCallback(async () => {
+        try {
+            await api.post('/logout');
+        } catch {
+            // Always clear local auth state even if server logout fails.
+        } finally {
+            resetSessionState();
+        }
     }, [resetSessionState]);
 
     const value = useMemo(() => ({

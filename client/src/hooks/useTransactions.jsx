@@ -20,6 +20,7 @@ export default function useTransactions() {
 		perPage: 20,
 		month: defaultPeriod.month,
 		year: defaultPeriod.year,
+		category_name: "",
 	});
 
 	const [pagination, setPagination] = useState({
@@ -40,6 +41,7 @@ export default function useTransactions() {
 		perPage: 20,
 		month: defaultPeriod.month,
 		year: defaultPeriod.year,
+		category_name: "",
 	});
 
 	const parseError = useCallback((err, fallback) => {
@@ -85,6 +87,7 @@ export default function useTransactions() {
 					per_page: nextQuery.perPage,
 					month: nextQuery.month,
 					year: nextQuery.year,
+					category_name: nextQuery.category_name || undefined,
 				},
 			});
 

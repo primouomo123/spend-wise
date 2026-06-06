@@ -15,11 +15,35 @@ import {
     Stack,
     TextField,
     Typography,
+    Paper,
+    Divider,
 } from "@mui/material";
+
 import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 
 import { useCategoryContext } from "../contexts/CategoryContext";
+
+/* ---------------- ERROR HELPERS ---------------- */
+
+function normalizeError(error) {
+    if (!error) return null;
+    if (Array.isArray(error)) return error.join(", ");
+    if (typeof error === "object") return Object.values(error).flat().join(", ");
+    return error;
+}
+
+function getRequestError(err, fallback) {
+    return (
+        normalizeError(err?.response?.data?.error) ||
+        normalizeError(err?.response?.data?.errors) ||
+        normalizeError(err?.response?.data?.details) ||
+        normalizeError(err?.message) ||
+        fallback
+    );
+}
+
+/* ---------------- PAGE ---------------- */
 
 export default function Categories() {
     const {
@@ -35,6 +59,7 @@ export default function Categories() {
 
     const [newCategoryName, setNewCategoryName] = useState("");
     const [actionError, setActionError] = useState(null);
+
     const [editTarget, setEditTarget] = useState(null);
     const [editName, setEditName] = useState("");
 
@@ -51,6 +76,12 @@ export default function Categories() {
         return categoriesError;
     }, [actionError, categoriesError]);
 
+    const visibleCategories = useMemo(() => {
+        return categories.filter((category) => String(category.name).toLowerCase() !== "income");
+    }, [categories]);
+
+    /* ---------------- CREATE ---------------- */
+
     async function handleCreate(event) {
         event.preventDefault();
         setActionError(null);
@@ -64,11 +95,16 @@ export default function Categories() {
         try {
             await createCategory({ name });
             setNewCategoryName("");
-            await getCategories({ page: pagination.page, perPage: pagination.perPage });
-        } catch {
-            setActionError("Could not create category.");
+            await getCategories({
+                page: pagination.page,
+                perPage: pagination.perPage,
+            });
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not create category."));
         }
     }
+
+    /* ---------------- EDIT ---------------- */
 
     function openEditDialog(category) {
         setEditTarget(category);
@@ -95,20 +131,28 @@ export default function Categories() {
         try {
             await updateCategory(editTarget.id, { name });
             closeEditDialog();
-            await getCategories({ page: pagination.page, perPage: pagination.perPage });
-        } catch {
-            setActionError("Could not update category.");
+            await getCategories({
+                page: pagination.page,
+                perPage: pagination.perPage,
+            });
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not update category."));
         }
     }
+
+    /* ---------------- DELETE ---------------- */
 
     async function handleDelete(categoryId) {
         setActionError(null);
 
         try {
             await deleteCategory(categoryId);
-            await getCategories({ page: pagination.page, perPage: pagination.perPage });
-        } catch {
-            setActionError("Could not delete category.");
+            await getCategories({
+                page: pagination.page,
+                perPage: pagination.perPage,
+            });
+        } catch (err) {
+            setActionError(getRequestError(err, "Could not delete category."));
         }
     }
 
@@ -116,119 +160,210 @@ export default function Categories() {
         await getCategories({ page, perPage: pagination.perPage });
     }
 
+    /* ---------------- LOADING ---------------- */
+
+    if (categoriesIsLoading) {
+        return (
+            <Card>
+                <CardContent>
+                    <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+                        <CircularProgress />
+                    </Box>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    /* ---------------- UI ---------------- */
+
     return (
-        <Stack spacing={2.5} sx={{ pb: 3 }}>
+        <Stack spacing={3} sx={{ pb: 4 }}>
+
+            {/* HEADER */}
             <Box>
-                <Typography variant="h4" component="h1" gutterBottom>
+                <Typography variant="h4" fontWeight={700}>
                     Categories
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                    Create and manage spending categories for your account.
+                    Create and manage spending categories.
                 </Typography>
             </Box>
 
-            {displayError ? <Alert severity="error">{displayError}</Alert> : null}
+            {/* ERROR */}
+            {displayError && <Alert severity="error">{displayError}</Alert>}
 
-            <Card>
+            {/* CREATE FORM (CENTERED + NOT TOO WIDE) */}
+            <Card
+                sx={{
+                    width: "fit-content",
+                    maxWidth: "100%",
+                    mx: "auto",
+                    alignSelf: "center",
+                }}
+            >
                 <CardContent>
-                    <Stack
+                    <Box
                         component="form"
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={1}
                         onSubmit={handleCreate}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            width: "fit-content",
+                        }}
                     >
-                        <TextField
-                            label="New Category"
-                            value={newCategoryName}
-                            onChange={(event) => setNewCategoryName(event.target.value)}
-                            fullWidth
-                        />
-                        <Button type="submit" variant="contained" disabled={categoriesIsLoading}>
-                            Add
-                        </Button>
+                        <Stack
+                            direction={{ xs: "column", sm: "row" }}
+                            spacing={1.2}
+                            sx={{
+                                width: { xs: "100%", sm: "fit-content" },
+                                minWidth: { sm: 460 },
+                            }}
+                        >
+                            <TextField
+                                label="New category"
+                                value={newCategoryName}
+                                onChange={(e) =>
+                                    setNewCategoryName(e.target.value)
+                                }
+                                size="small"
+                                fullWidth
+                            />
+
+                            <Button
+                                type="submit"
+                                variant="contained"
+                                sx={{
+                                    textTransform: "none",
+                                    px: 3,
+                                    borderRadius: 2,
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                Add
+                            </Button>
+                        </Stack>
+                    </Box>
+                </CardContent>
+            </Card>
+
+            {/* LIST */}
+            <Card
+                sx={{
+                    width: "fit-content",
+                    minWidth: 400,
+                    maxWidth: 500,
+                    mx: "auto",
+                    alignSelf: "center",
+                }}
+            >
+                <CardContent>
+                    <Stack spacing={1}>
+                        {visibleCategories.length === 0 ? (
+                            <Typography color="text.secondary">
+                                No categories yet.
+                            </Typography>
+                        ) : (
+                            visibleCategories.map((category, index) => (
+                                <Box key={category.id}>
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "space-between",
+                                            py: 1.2,
+                                            px: 1,
+                                            borderRadius: 2,
+                                            transition: "all 150ms ease",
+
+                                            "&:hover": {
+                                                backgroundColor: "action.hover",
+                                            },
+                                        }}
+                                    >
+                                        <Typography fontWeight={500}>
+                                            {category.name}
+                                        </Typography>
+
+                                        <Stack direction="row" spacing={0.5}>
+                                            <IconButton
+                                                size="small"
+                                                onClick={() =>
+                                                    openEditDialog(category)
+                                                }
+                                            >
+                                                <EditRoundedIcon fontSize="small" />
+                                            </IconButton>
+
+                                            <IconButton
+                                                size="small"
+                                                color="error"
+                                                onClick={() =>
+                                                    handleDelete(category.id)
+                                                }
+                                            >
+                                                <DeleteOutlineRoundedIcon fontSize="small" />
+                                            </IconButton>
+                                        </Stack>
+                                    </Box>
+
+                                    {index !== visibleCategories.length - 1 && (
+                                        <Divider />
+                                    )}
+                                </Box>
+                            ))
+                        )}
                     </Stack>
                 </CardContent>
             </Card>
 
-            <Card>
-                <CardContent>
-                    {categoriesIsLoading ? (
-                        <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
-                            <CircularProgress />
-                        </Box>
-                    ) : categories.length === 0 ? (
-                        <Typography color="text.secondary">
-                            No categories yet.
-                        </Typography>
-                    ) : (
-                        <Stack spacing={1}>
-                            {categories.map((category) => (
-                                <Box
-                                    key={category.id}
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        border: "1px solid",
-                                        borderColor: "divider",
-                                        borderRadius: 2,
-                                        px: 1.5,
-                                        py: 1,
-                                    }}
-                                >
-                                    <Typography>{category.name}</Typography>
-                                    <Stack direction="row" spacing={0.5}>
-                                        <IconButton
-                                            size="small"
-                                            onClick={() => openEditDialog(category)}
-                                            aria-label={`Edit ${category.name}`}
-                                        >
-                                            <EditRoundedIcon fontSize="small" />
-                                        </IconButton>
-                                        <IconButton
-                                            size="small"
-                                            color="error"
-                                            onClick={() => handleDelete(category.id)}
-                                            aria-label={`Delete ${category.name}`}
-                                        >
-                                            <DeleteOutlineRoundedIcon fontSize="small" />
-                                        </IconButton>
-                                    </Stack>
-                                </Box>
-                            ))}
-                        </Stack>
-                    )}
-                </CardContent>
-            </Card>
-
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 1, flexWrap: "wrap" }}>
+            {/* PAGINATION */}
+            <Box
+                sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                    gap: 1,
+                }}
+            >
                 <Typography variant="body2" color="text.secondary">
-                    Total categories: {pagination.total}
+                    Total: {visibleCategories.length}
                 </Typography>
 
                 <Pagination
-                    color="primary"
-                    count={Math.max(pagination.totalPages, 1)}
                     page={pagination.page}
+                    count={Math.max(pagination.totalPages, 1)}
                     onChange={handlePageChange}
-                    disabled={categoriesIsLoading || pagination.totalPages <= 1}
+                    color="primary"
+                    disabled={
+                        categoriesIsLoading || pagination.totalPages <= 1
+                    }
                 />
             </Box>
 
-            <Dialog open={Boolean(editTarget)} onClose={closeEditDialog} fullWidth maxWidth="xs">
-                <DialogTitle>Edit Category</DialogTitle>
+            {/* EDIT DIALOG */}
+            <Dialog
+                open={Boolean(editTarget)}
+                onClose={closeEditDialog}
+                fullWidth
+                maxWidth="xs"
+            >
+                <DialogTitle>Edit category</DialogTitle>
+
                 <DialogContent>
                     <TextField
-                        label="Category Name"
                         value={editName}
-                        onChange={(event) => setEditName(event.target.value)}
+                        onChange={(e) => setEditName(e.target.value)}
+                        label="Name"
                         fullWidth
+                        size="small"
                         sx={{ mt: 1 }}
                     />
                 </DialogContent>
+
                 <DialogActions>
                     <Button onClick={closeEditDialog}>Cancel</Button>
-                    <Button onClick={handleUpdate} variant="contained">
+                    <Button variant="contained" onClick={handleUpdate}>
                         Save
                     </Button>
                 </DialogActions>
