@@ -93,7 +93,7 @@ Start frontend dev server:
 npm run dev
 ```
 
-Frontend runs on http://localhost:5173
+Frontend runs on http://localhost:5173 (Please do not run it on http://127.0.0.1:5173 because localhost and 127.0.0.1 are treated as different origins, so the refresh token cookie is only sent to the exact host it was created for)
 
 ## 4) Run Tests
 
