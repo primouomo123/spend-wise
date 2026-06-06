@@ -55,7 +55,7 @@ export default function useCategories() {
     } finally {
       setIsLoading(false);
     }
-  }, [setPaginationFromResponse]);
+  }, [parseError, setPaginationFromResponse]);
 
   // CREATE
   const createCategory = useCallback(async (data) => {

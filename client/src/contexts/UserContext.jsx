@@ -69,17 +69,7 @@ export function UserProvider({ children }) {
         };
     }, [resetSessionState]);
 
-    useEffect(() => {
-        if (signUpUser) {
-            setCurrentUser(signUpUser);
-        }
-    }, [signUpUser]);
-
-    useEffect(() => {
-        if (loginUser) {
-            setCurrentUser(loginUser);
-        }
-    }, [loginUser]);
+    const resolvedCurrentUser = loginUser ?? signUpUser ?? currentUser;
 
     const logout = useCallback(async () => {
         try {
@@ -99,7 +89,7 @@ export function UserProvider({ children }) {
         loginError,
         loginIsLoading,
         logout,
-        currentUser,
+        currentUser: resolvedCurrentUser,
         authIsLoading,
     }), [
         signUp,
@@ -109,7 +99,7 @@ export function UserProvider({ children }) {
         loginError,
         loginIsLoading,
         logout,
-        currentUser,
+        resolvedCurrentUser,
         authIsLoading,
     ]);
 

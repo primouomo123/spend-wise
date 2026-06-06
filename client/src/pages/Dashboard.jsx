@@ -101,8 +101,14 @@ export default function Dashboard() {
         Number(summary.transaction_balance ?? 0) -
         Number(summary.budget_balance ?? 0);
 
-    const transactionSummaries = summary.transaction_summaries ?? [];
-    const budgetSummaries = summary.budget_summaries ?? [];
+    const transactionSummaries = useMemo(
+        () => summary.transaction_summaries ?? [],
+        [summary.transaction_summaries]
+    );
+    const budgetSummaries = useMemo(
+        () => summary.budget_summaries ?? [],
+        [summary.budget_summaries]
+    );
 
     const budgetVsActual = useMemo(() => {
         const actualByCategory = new Map();

@@ -33,7 +33,6 @@ export function DashboardProvider({ children }) {
 	);
 }
 
-// eslint-disable-next-line react-refresh/only-export-components
 export function useDashboardContext() {
 	const context = useContext(DashboardContext);
 

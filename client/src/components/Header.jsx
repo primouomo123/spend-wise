@@ -1,7 +1,6 @@
 import {
     Box,
     Paper,
-    Stack,
     Typography,
     Button,
     IconButton,
@@ -18,11 +17,9 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 
-import { useUserContext } from "../contexts/UserContext";
 import { useThemeContext } from "../contexts/ThemeContext";
 
 export default function Header({ onLogout }) {
-    const { currentUser } = useUserContext();
     const { isDarkMode, toggleTheme } = useThemeContext();
 
     const navLinks = [
