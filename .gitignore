@@ -1,17 +1,30 @@
 server/.env
+client/.env
 
-server/__pycache__/
+# Python cache / tooling
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
+# Server runtime folders
 server/instance/
 
-server/migrations/__pycache__/
+# Virtual environments
+.venv/
+venv/
+env/
 
-server/models/__pycache__/
+# Node
+node_modules/
+client/node_modules/
 
-server/resources/__pycache__/
-
-server/utils/__pycache__/
-
+# Editors
 .vscode/
+.idea/
 
-client/.env
+# Build outputs
+client/dist/
