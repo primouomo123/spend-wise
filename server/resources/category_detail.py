@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from marshmallow import ValidationError
 
-from models import Category, CategorySchema, CreateCategorySchema, UpdateCategorySchema
+from models import Category, UpdateCategorySchema
 from config import db
 
 class CategoryDetail(Resource):

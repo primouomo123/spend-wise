@@ -6,7 +6,7 @@ from sqlalchemy import extract
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from marshmallow import ValidationError
 
-from models import Transaction, TransactionSchema, CreateTransactionSchema, Category
+from models import Transaction, CreateTransactionSchema, Category
 from config import db
 from utils import get_exchange_rate, TRANSACTION_TYPES
 

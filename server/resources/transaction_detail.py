@@ -4,7 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from marshmallow import ValidationError
 
-from models import Transaction, TransactionSchema, UpdateTransactionSchema, Category
+from models import Transaction, UpdateTransactionSchema, Category
 from config import db
 from utils import get_exchange_rate, TRANSACTION_TYPES
 

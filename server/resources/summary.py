@@ -1,13 +1,10 @@
 from flask import request, jsonify, make_response
 from flask_restful import Resource
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy import extract, func, case
+from sqlalchemy import extract, func
 from flask_jwt_extended import get_jwt_identity, jwt_required
-from marshmallow import ValidationError
-
 from models import Category, Transaction, Budget
 from config import db
-from utils import get_exchange_rate, TRANSACTION_TYPES
+from utils import TRANSACTION_TYPES
 
 from decimal import Decimal, ROUND_HALF_UP
 from datetime import datetime

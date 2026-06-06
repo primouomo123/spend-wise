@@ -4,11 +4,8 @@ from sqlalchemy.exc import IntegrityError
 from flask_jwt_extended import get_jwt_identity, jwt_required
 from marshmallow import ValidationError
 
-from models import Budget, BudgetSchema, UpdateBudgetSchema, Category
+from models import Budget, UpdateBudgetSchema, Category
 from config import db
-from utils import get_exchange_rate, TRANSACTION_TYPES
-
-from decimal import Decimal, ROUND_HALF_UP
 
 class BudgetDetail(Resource):
     """Resource for retrieving, updating, and deleting a specific budget."""
